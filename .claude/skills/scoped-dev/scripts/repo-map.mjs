@@ -2,6 +2,7 @@
 //   --write   regenerate the marked regions of references/repo-map.md and references/map-index.json
 //   --status  one-glance freshness (always exits 0; safe for skill injection)
 //   --check   exit 1 if the map is stale
+//   --describe <path> <purpose>   set a file's purpose in the file index (the map lives under .claude/, which edit tools may not write)
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SKILL_DIR, buildGraph, listFiles, read, sha1, sortStr } from './scan.mjs';
@@ -228,14 +229,27 @@ function write() {
   if (todo) console.log(`  ${todo} file purpose(s) say "TODO: describe" — fill them in`);
 }
 
+function describe(path, purpose) {
+  const map = readFileSync(MAP, 'utf8');
+  const re = new RegExp(`^(\\| \`${path.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\` \\| \\d+ \\| ).*( \\|)$`, 'm');
+  if (!purpose || !re.test(map)) {
+    console.log(`repo-map: no file-index row for ${path} (run --write first) or empty purpose`);
+    process.exitCode = 1;
+    return;
+  }
+  writeFileSync(MAP, map.replace(re, (_, a, b) => `${a}${purpose.replace(/\|/g, '/')}${b}`));
+  console.log(`repo-map: described ${path}`);
+}
+
 const mode = process.argv[2];
 if (mode === '--write') write();
+else if (mode === '--describe') describe(process.argv[3] ?? '', process.argv.slice(4).join(' ').trim());
 else if (mode === '--check') {
   const stale = !existsSync(INDEX) || Object.values(diffIndex(loadIndex(), hashes(listFiles()))).some((a) => a.length);
   console.log(stale ? 'repo-map: STALE' : 'repo-map: fresh');
   process.exitCode = stale ? 1 : 0;
 } else if (mode === '--status' || mode === undefined) status();
 else {
-  console.log('usage: repo-map.mjs --write | --status | --check');
+  console.log('usage: repo-map.mjs --write | --status | --check | --describe <path> <purpose>');
   process.exitCode = 2;
 }

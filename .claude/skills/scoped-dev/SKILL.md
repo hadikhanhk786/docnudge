@@ -62,7 +62,7 @@ Run in this order, narrowest first:
 1. The targeted test: `npx vitest run <test file>` (the map's tests section maps sources to test files).
 2. Full gates from package.json: `npm run typecheck`, `npm test`, and `npm run build` when UI or build config changed.
 3. Mechanical gate with the contract files: `node ${CLAUDE_SKILL_DIR}/scripts/check.mjs --allow <comma-separated paths or globs>`. It typechecks with unused-code flags, scans unused exports, flags files outside the contract, and lists added exports (justify each one).
-4. If you added, renamed or removed a file, route, table, env var, script or export: `node ${CLAUDE_SKILL_DIR}/scripts/repo-map.mjs --write`, then replace any "TODO: describe" in the map's file index.
+4. If you added, renamed or removed a file, route, table, env var, script or export: `node ${CLAUDE_SKILL_DIR}/scripts/repo-map.mjs --write`, then fill each "TODO: describe" it reports with `node ${CLAUDE_SKILL_DIR}/scripts/repo-map.mjs --describe <path> <purpose>` (edit tools cannot write under `.claude/`).
 
 Final report, 8 lines max:
 ```
