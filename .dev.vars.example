@@ -5,3 +5,5 @@ CLERK_PUBLISHABLE_KEY=pk_test_xxx
 LINK_SECRET=replace-with-a-long-random-string
 APP_URL=http://localhost:5173
 RESEND_API_KEY=re_xxx
+DODO_API_KEY=
+DODO_WEBHOOK_KEY=

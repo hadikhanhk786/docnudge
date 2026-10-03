@@ -9,6 +9,8 @@ export interface Firm {
   plan: 'trial' | 'active' | 'past_due' | 'canceled';
   notify_email: string | null;
   reply_to: string | null;
+  billing_customer_id: string | null;
+  current_period_end: string | null;
 }
 
 export type ItemStatus = 'pending' | 'received' | 'approved' | 'rejected';

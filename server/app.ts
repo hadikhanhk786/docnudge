@@ -3,6 +3,7 @@ import { neon } from '@neondatabase/serverless';
 import { Hono } from 'hono';
 import type { MiddlewareHandler } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
+import { dodoBaseUrl, planForEvent, verifyWebhook } from '../shared/billing';
 import { sendEmail } from '../shared/email';
 import { completeEmail } from '../shared/emailTemplates';
 import { buildLink, capRemaining, deliverRequestEmail, type Sql } from '../shared/mailer';
@@ -41,7 +42,8 @@ const str = (v: unknown, max: number): string | null => (typeof v === 'string' &
 // Columns for a request row. Dates are cast to text so they stay YYYY-MM-DD (no time zone surprises).
 const REQ_COLS =
   "r.id, r.firm_id, r.client_name, r.client_email, r.client_phone, r.language, r.template_id, r.title, r.due_date::text as due_date, r.link_version, r.status, r.initial_sent_at, r.reminders_sent, r.last_reminder_at, r.next_reminder_at, r.created_at";
-const FIRM_COLS = 'id, owner_user_id, name, region, language, plan, notify_email, reply_to';
+const FIRM_COLS =
+  "id, owner_user_id, name, region, language, plan, notify_email, reply_to, billing_customer_id, billing_subscription_id, (current_period_end at time zone 'UTC')::date::text as current_period_end";
 
 /** Mark a request complete when every required item is received/approved, or reopen it if one needs fixing. */
 async function recomputeRequestStatus(sql: Sql, requestId: string): Promise<'open' | 'complete'> {
@@ -79,8 +81,13 @@ const authed = new Hono<AppEnv>();
 authed.use('*', requireUser);
 
 authed.get('/me', async (c) => {
+  const firm = c.get('firm');
   const sql = sqlOf(c.env);
-  return c.json({ firm: c.get('firm'), emailsLeft: await capRemaining(sql, c.env.DAILY_EMAIL_CAP) });
+  const [emailsLeft, used] = await Promise.all([
+    capRemaining(sql, c.env.DAILY_EMAIL_CAP),
+    sql`select count(*)::int as n from requests where firm_id = ${firm.id} and status <> 'archived'`,
+  ]);
+  return c.json({ firm, emailsLeft, requestsUsed: Number(used[0]?.n), trialLimit: Number(c.env.TRIAL_REQUEST_LIMIT ?? 25) });
 });
 
 authed.put('/firm', async (c) => {
@@ -284,6 +291,49 @@ authed.get('/files/:id', async (c) => {
   });
 });
 
+// Billing (Dodo Payments). Price and product always come from server config, never from the browser.
+async function dodo(env: Env, path: string, body?: unknown): Promise<Record<string, unknown> | null> {
+  const res = await fetch(`${dodoBaseUrl(env.DODO_ENV)}${path}`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${env.DODO_API_KEY}`, ...(body === undefined ? {} : { 'content-type': 'application/json' }) },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) {
+    console.error('dodo request failed', path.split('/')[1], res.status); // no body: it can contain customer data
+    return null;
+  }
+  return (await res.json()) as Record<string, unknown>;
+}
+
+authed.post('/billing/checkout', async (c) => {
+  const firm = c.get('firm');
+  const b = (await c.req.json().catch(() => null)) as Record<string, unknown> | null;
+  if (b?.interval !== 'monthly' && b?.interval !== 'yearly') return c.json({ error: 'invalid_interval' }, 400);
+  const productId = b.interval === 'monthly' ? c.env.DODO_PRODUCT_FIRM_MONTHLY : c.env.DODO_PRODUCT_FIRM_YEARLY;
+  if (!productId || !c.env.DODO_API_KEY) return c.json({ error: 'billing_not_configured' }, 503);
+  if (firm.plan === 'active' && firm.billing_subscription_id) return c.json({ error: 'already_subscribed' }, 409);
+  const email = firm.notify_email ?? firm.reply_to;
+  const customer = firm.billing_customer_id ? { customer_id: firm.billing_customer_id } : email ? { email, name: firm.name } : undefined;
+  const session = await dodo(c.env, '/checkouts', {
+    product_cart: [{ product_id: productId, quantity: 1 }],
+    customer,
+    metadata: { firm_id: firm.id },
+    return_url: `${c.env.APP_URL.replace(/\/+$/, '')}/settings?billing=done`,
+  });
+  if (typeof session?.checkout_url !== 'string') return c.json({ error: 'billing_failed' }, 502);
+  return c.json({ url: session.checkout_url });
+});
+
+authed.post('/billing/portal', async (c) => {
+  const firm = c.get('firm');
+  if (!firm.billing_customer_id) return c.json({ error: 'no_billing' }, 404);
+  if (!c.env.DODO_API_KEY) return c.json({ error: 'billing_not_configured' }, 503);
+  const back = encodeURIComponent(`${c.env.APP_URL.replace(/\/+$/, '')}/settings`);
+  const session = await dodo(c.env, `/customers/${encodeURIComponent(firm.billing_customer_id)}/customer-portal/session?return_url=${back}`);
+  if (typeof session?.link !== 'string') return c.json({ error: 'billing_failed' }, 502);
+  return c.json({ url: session.link });
+});
+
 // ------------------------------------------------------------------------------------------
 // Client routes  (/api/public/:token/*)  No login. The signed token in the URL is the credential.
 // ------------------------------------------------------------------------------------------
@@ -306,11 +356,13 @@ async function resolveToken(env: Env, token: string): Promise<PubReq | null> {
   const sql = sqlOf(env);
   const rows = await sql`
     select r.id, r.firm_id, r.client_name, r.title, r.due_date::text as due_date, r.language, r.status, r.link_version,
-           f.name as firm_name, f.notify_email as firm_notify_email, f.language as firm_language, f.plan as firm_plan
+           f.name as firm_name, f.notify_email as firm_notify_email, f.language as firm_language,
+           (f.plan = 'canceled' and (f.canceled_at is null or f.canceled_at < now() - interval '30 days')) as links_expired
     from requests r join firms f on f.id = r.firm_id where r.id = ${parsed.requestId}`;
   const r = rows[0];
   if (!r || Number(r.link_version) !== parsed.version) return null;
-  if (r.status === 'archived' || r.firm_plan === 'canceled') return null;
+  // A canceled firm's existing links keep working for 30 days after cancellation.
+  if (r.status === 'archived' || r.links_expired) return null;
   return r as PubReq;
 }
 
@@ -413,9 +465,46 @@ app.get('/health', (c) => c.json({ ok: true }));
 app.route('/app', authed);
 app.route('/public', pub);
 
-// Billing is intentionally a stub. Pick a merchant of record that pays out to your country
-// (Dodo Payments or Paddle), then verify its webhook signature here and set firms.plan.
-app.post('/billing/webhook', (c) => c.json({ error: 'billing_not_configured' }, 501));
+// Dodo Payments webhook. Verify the signature on the raw body before parsing anything.
+app.post('/billing/webhook', async (c) => {
+  const body = await c.req.text();
+  const id = c.req.header('webhook-id');
+  const headers = { id, timestamp: c.req.header('webhook-timestamp'), signature: c.req.header('webhook-signature') };
+  if (!c.env.DODO_WEBHOOK_KEY || !id || !(await verifyWebhook(c.env.DODO_WEBHOOK_KEY, headers, body, Date.now() / 1000))) {
+    return c.json({ error: 'invalid_signature' }, 401);
+  }
+  const event = JSON.parse(body) as { type?: string; timestamp?: string; data?: Record<string, any> };
+  const type = String(event.type ?? '');
+  const data = event.data ?? {};
+  const sql = sqlOf(c.env);
+  if ((await sql`select 1 as seen from billing_events where id = ${id}`)[0]) return c.json({ ok: true, duplicate: true });
+
+  const plan = planForEvent(type, data.status);
+  const firmId = typeof data.metadata?.firm_id === 'string' && isUuid(data.metadata.firm_id) ? data.metadata.firm_id : null;
+  const subId = typeof data.subscription_id === 'string' ? data.subscription_id : null;
+  const firm = plan
+    ? (await sql`select id from firms where id = ${firmId} or (${subId}::text is not null and billing_subscription_id = ${subId}) limit 1`)[0]
+    : undefined;
+  const record = sql`insert into billing_events (id, type) values (${id}, ${type}) on conflict (id) do nothing`;
+  if (!plan || !firm) {
+    await record; // unknown firm or an event that doesn't change the plan: remember it, change nothing
+    return c.json({ ok: true });
+  }
+  const at = typeof event.timestamp === 'string' && !Number.isNaN(Date.parse(event.timestamp)) ? event.timestamp : new Date().toISOString();
+  const customerId = typeof data.customer?.customer_id === 'string' ? data.customer.customer_id : null;
+  const periodEnd = typeof data.next_billing_date === 'string' ? data.next_billing_date : null;
+  await sql.transaction([
+    record,
+    sql`update firms set plan = ${plan},
+          billing_customer_id = coalesce(${customerId}, billing_customer_id),
+          billing_subscription_id = coalesce(${subId}, billing_subscription_id),
+          current_period_end = coalesce(${periodEnd}::timestamptz, current_period_end),
+          canceled_at = case when ${plan} = 'canceled' then coalesce(canceled_at, now()) else null end,
+          billing_event_at = ${at}
+        where id = ${firm.id} and (billing_event_at is null or billing_event_at <= ${at}::timestamptz)`,
+  ]);
+  return c.json({ ok: true });
+});
 
 app.notFound((c) => c.json({ error: 'not_found' }, 404));
 app.onError((err, c) => {

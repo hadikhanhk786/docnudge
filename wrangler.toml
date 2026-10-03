@@ -20,7 +20,11 @@ EMAIL_FROM = "DocNudge <hello@example.com>"
 DAILY_EMAIL_CAP = "90"
 # Max open requests for firms on plan='trial' (0 = unlimited).
 TRIAL_REQUEST_LIMIT = "25"
+# Dodo Payments: "test_mode" or "live_mode", and the product ids of the monthly and yearly firm plans.
+DODO_ENV = "test_mode"
+DODO_PRODUCT_FIRM_MONTHLY = ""
+DODO_PRODUCT_FIRM_YEARLY = ""
 
 # Secrets (set with `npx wrangler pages secret put NAME`):
-#   DATABASE_URL, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, LINK_SECRET, RESEND_API_KEY
+#   DATABASE_URL, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, LINK_SECRET, RESEND_API_KEY, DODO_API_KEY, DODO_WEBHOOK_KEY
 #   (SES only) AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION

@@ -91,5 +91,19 @@
   "client_not_found_body": "Ask your accountant for a new link.",
   "client_err_large": "That file is over 25 MB. Try a smaller photo or a PDF.",
   "client_err_type": "Use a PDF, photo, Word or Excel file.",
-  "client_err_generic": "Upload failed. Check your connection and try again."
+  "client_err_generic": "Upload failed. Check your connection and try again.",
+  "billing_title": "Billing",
+  "plan_trial": "Free trial",
+  "plan_active": "Active",
+  "plan_past_due": "Payment failed",
+  "plan_canceled": "Canceled",
+  "billing_usage": "{used} of {limit} requests used on the free trial",
+  "billing_renews": "Renews on {date}",
+  "billing_upgrade_monthly": "Upgrade monthly",
+  "billing_upgrade_yearly": "Upgrade yearly",
+  "billing_manage": "Manage billing",
+  "billing_past_due": "Your last payment failed. Update your card in Manage billing to avoid an interruption.",
+  "billing_canceled": "Your subscription has ended. Upgrade to create new requests and send reminders.",
+  "billing_done": "Thanks! Your plan updates as soon as the payment is confirmed.",
+  "billing_unavailable": "Billing isn't available right now. Please try again later."
 }

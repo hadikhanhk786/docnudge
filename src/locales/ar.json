@@ -91,5 +91,19 @@
   "client_not_found_body": "اطلب رابطًا جديدًا من محاسبك.",
   "client_err_large": "حجم الملف أكبر من 25 ميغابايت. جرّب صورة أصغر أو ملف PDF.",
   "client_err_type": "استخدم ملف PDF أو صورة أو Word أو Excel.",
-  "client_err_generic": "فشل الرفع. تحقق من اتصالك وحاول مرة أخرى."
+  "client_err_generic": "فشل الرفع. تحقق من اتصالك وحاول مرة أخرى.",
+  "billing_title": "الفوترة",
+  "plan_trial": "تجربة مجانية",
+  "plan_active": "نشطة",
+  "plan_past_due": "تعذّر الدفع",
+  "plan_canceled": "ملغاة",
+  "billing_usage": "استخدمت {used} من {limit} طلبات في التجربة المجانية",
+  "billing_renews": "تتجدد في {date}",
+  "billing_upgrade_monthly": "ترقية شهرية",
+  "billing_upgrade_yearly": "ترقية سنوية",
+  "billing_manage": "إدارة الفوترة",
+  "billing_past_due": "تعذّر تحصيل آخر دفعة. حدّث بطاقتك من «إدارة الفوترة» لتجنب انقطاع الخدمة.",
+  "billing_canceled": "انتهى اشتراكك. قم بالترقية لإنشاء طلبات جديدة وإرسال التذكيرات.",
+  "billing_done": "شكرًا! ستتحدث خطتك فور تأكيد الدفع.",
+  "billing_unavailable": "الفوترة غير متاحة حاليًا. يرجى المحاولة لاحقًا."
 }

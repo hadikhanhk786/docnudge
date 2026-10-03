@@ -2,6 +2,7 @@
 // Only three things are faked: the Neon HTTP driver (same SQL, different transport), Clerk sign-in and R2.
 import { readFileSync } from 'node:fs';
 import { PGlite } from '@electric-sql/pglite';
+import { Webhook } from 'standardwebhooks';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 const h = vi.hoisted(() => {
@@ -95,6 +96,11 @@ const baseEnv = {
   RESEND_API_KEY: 're_test',
   DAILY_EMAIL_CAP: '10',
   TRIAL_REQUEST_LIMIT: '25',
+  DODO_API_KEY: 'dodo_test_key',
+  DODO_WEBHOOK_KEY: `whsec_${btoa('dodo-test-signing-key-0123456789')}`,
+  DODO_ENV: 'test_mode',
+  DODO_PRODUCT_FIRM_MONTHLY: 'pdt_monthly',
+  DODO_PRODUCT_FIRM_YEARLY: 'pdt_yearly',
 };
 type TestEnv = typeof baseEnv;
 
@@ -125,6 +131,37 @@ async function call(
   return { status: res.status, res, json: (isJson ? await res.json() : null) as any };
 }
 const tokenOf = (link: string) => link.split('/r/')[1];
+
+// Dodo webhooks, signed with the reference Standard Webhooks library (not our own code).
+function hook(payload: object, o: { id?: string; secret?: string; at?: Date } = {}) {
+  const body = JSON.stringify(payload);
+  const id = o.id ?? `msg_${crypto.randomUUID()}`;
+  const at = o.at ?? new Date();
+  const signature = new Webhook(o.secret ?? baseEnv.DODO_WEBHOOK_KEY).sign(id, at, body);
+  return call('POST', '/api/billing/webhook', {
+    raw: body,
+    headers: { 'content-type': 'application/json', 'webhook-id': id, 'webhook-timestamp': String(Math.floor(at.getTime() / 1000)), 'webhook-signature': signature },
+  });
+}
+const subEvent = (type: string, firmId: string, data: Record<string, unknown> = {}, timestamp = new Date().toISOString()) => ({
+  business_id: 'bus_test',
+  type,
+  timestamp,
+  data: {
+    payload_type: 'Subscription',
+    subscription_id: 'sub_1',
+    status: 'active',
+    customer: { customer_id: 'cus_1', email: 'owner@firm2.test', name: 'Firm Two' },
+    metadata: { firm_id: firmId },
+    next_billing_date: '2026-11-03T00:00:00Z',
+    ...data,
+  },
+});
+const firmRow = async (owner: string) =>
+  (await h.ctx.db.query(`select id, plan, billing_customer_id, billing_subscription_id, canceled_at from firms where owner_user_id = $1`, [owner])).rows[0];
+const lastFetch = () => (fetch as unknown as ReturnType<typeof vi.fn>).mock.lastCall as [string, RequestInit];
+const dodoReplies = (json: object) =>
+  (fetch as unknown as ReturnType<typeof vi.fn>).mockImplementationOnce(async () => new Response(JSON.stringify(json), { status: 200 }));
 const bytes = (n: number) => new Uint8Array(n).fill(7);
 const put = (token: string, itemId: string, name: string, type = 'application/pdf', size = 5) =>
   call('PUT', `/api/public/${token}/items/${itemId}/upload?name=${encodeURIComponent(name)}`, {
@@ -341,5 +378,73 @@ describe('API + cron against real Postgres', () => {
 
     await call('PATCH', `/api/app/requests/${requestId}`, { user: 'user_1', body: { status: 'archived' } });
     expect((await call('GET', `/api/public/${tokenOf(link)}`)).status).toBe(404);
+  });
+  it('billing webhook: only a valid signature changes the plan; replays, stale events and unknown firms are ignored', async () => {
+    const firmId = (await call('GET', '/api/app/me', { user: 'user_2' })).json.firm.id;
+    const active = subEvent('subscription.active', firmId);
+
+    const forged = await hook(active, { secret: `whsec_${btoa('not-the-real-key-not-the-real-key')}` });
+    expect(forged.status).toBe(401);
+    const unsigned = await call('POST', '/api/billing/webhook', { raw: JSON.stringify(active), headers: { 'content-type': 'application/json' } });
+    expect(unsigned.status).toBe(401);
+    const old = await hook(active, { at: new Date(Date.now() - 10 * 60_000) });
+    expect(old.status).toBe(401);
+    expect((await firmRow('user_2')).plan).toBe('trial');
+
+    expect((await hook(active, { id: 'msg_activate' })).status).toBe(200);
+    expect(await firmRow('user_2')).toMatchObject({ plan: 'active', billing_customer_id: 'cus_1', billing_subscription_id: 'sub_1' });
+    const me = await call('GET', '/api/app/me', { user: 'user_2' });
+    expect(me.json.firm.current_period_end).toBe('2026-11-03');
+
+    const replay = await hook(subEvent('subscription.cancelled', firmId, { status: 'cancelled' }), { id: 'msg_activate' });
+    expect(replay.json).toMatchObject({ duplicate: true });
+    const stale = await hook(subEvent('subscription.past_due', firmId, { status: 'past_due' }, '2020-01-01T00:00:00Z'));
+    expect(stale.status).toBe(200);
+    const stranger = await hook(subEvent('subscription.cancelled', crypto.randomUUID(), { subscription_id: 'sub_other', status: 'cancelled' }));
+    expect(stranger.status).toBe(200);
+    expect((await firmRow('user_2')).plan).toBe('active');
+  });
+
+  it('cancellation blocks new requests and reminders but keeps existing links for 30 days', async () => {
+    const firmId = (await firmRow('user_2')).id;
+    const created = await call('POST', '/api/app/requests', { user: 'user_2', body: { clientName: 'Omar', templateId: 'us.individual', clientEmail: 'omar@client.test' } });
+    expect(created.status).toBe(201);
+    await h.ctx.db.query(`update requests set initial_sent_at = now(), next_reminder_at = now() - interval '1 hour' where id = $1`, [created.json.id]);
+
+    await hook(subEvent('subscription.cancelled', firmId, { status: 'cancelled' }));
+    expect((await firmRow('user_2')).plan).toBe('canceled');
+    expect((await call('GET', `/api/public/${tokenOf(created.json.link)}`)).status).toBe(200);
+    const blocked = await call('POST', '/api/app/requests', { user: 'user_2', body: { clientName: 'X', templateId: 'us.individual' } });
+    expect(blocked.json.error).toBe('plan_inactive');
+    expect(await runReminders({ ...baseEnv, DAILY_EMAIL_CAP: '50' } as never, new Date('2026-12-01T18:00:00Z'))).toEqual({ sent: 0, failed: 0 });
+
+    await h.ctx.db.query(`update firms set canceled_at = now() - interval '31 days' where id = $1`, [firmId]);
+    expect((await call('GET', `/api/public/${tokenOf(created.json.link)}`)).status).toBe(404);
+
+    await hook(subEvent('subscription.active', firmId));
+    expect(await firmRow('user_2')).toMatchObject({ plan: 'active', canceled_at: null });
+  });
+
+  it('checkout needs a session and always uses the server-side product id', async () => {
+    expect((await call('POST', '/api/app/billing/checkout', { body: { interval: 'monthly' } })).status).toBe(401);
+    expect((await call('POST', '/api/app/billing/checkout', { user: 'user_3', body: { interval: 'weekly' } })).status).toBe(400);
+
+    dodoReplies({ session_id: 'cks_1', checkout_url: 'https://test.checkout.dodopayments.com/cks_1' });
+    const res = await call('POST', '/api/app/billing/checkout', { user: 'user_3', body: { interval: 'yearly', product_id: 'pdt_free', price: 1 } });
+    expect(res.json).toEqual({ url: 'https://test.checkout.dodopayments.com/cks_1' });
+    const [url, init] = lastFetch();
+    expect(url).toBe('https://test.dodopayments.com/checkouts');
+    const body = JSON.parse(String(init.body));
+    expect(body.product_cart).toEqual([{ product_id: 'pdt_yearly', quantity: 1 }]);
+    expect(body.metadata).toEqual({ firm_id: (await firmRow('user_3')).id });
+    expect(body.return_url).toBe('https://app.test/settings?billing=done');
+  });
+
+  it("opens only the caller's own customer portal", async () => {
+    expect((await call('POST', '/api/app/billing/portal', { user: 'user_3' })).status).toBe(404);
+    dodoReplies({ link: 'https://customer.dodopayments.com/session/abc' });
+    const res = await call('POST', '/api/app/billing/portal', { user: 'user_2' });
+    expect(res.json).toEqual({ url: 'https://customer.dodopayments.com/session/abc' });
+    expect(lastFetch()[0]).toBe('https://test.dodopayments.com/customers/cus_1/customer-portal/session?return_url=https%3A%2F%2Fapp.test%2Fsettings');
   });
 });

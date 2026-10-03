@@ -16,10 +16,10 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 ## Where to change X
 | change | files, in order | test |
 |---|---|---|
-| region template | shared/packs.ts (new region also: Region type, REGIONS, schema.sql firms.region check, shared/schedule.ts, `region_xx` locale keys) | tests/shared.test.ts "region packs"; ae.vat item count is also asserted in tests/api.integration.test.ts:203 |
+| region template | shared/packs.ts (new region also: Region type, REGIONS, schema.sql firms.region check, shared/schedule.ts, `region_xx` locale keys) | tests/shared.test.ts "region packs"; ae.vat item count is also asserted in tests/api.integration.test.ts (`toHaveLength`) |
 | API route | server/app.ts (`authed` or `pub`) → src/lib/types.ts → page | tests/api.integration.test.ts |
-| DB schema | schema.sql → migrations/NNN_name.sql (rule, folder not created yet) → REQ_COLS/FIRM_COLS in server/app.ts → src/lib/types.ts | tests/api.integration.test.ts |
-| env var / binding | server/types.ts Env (or MailEnv/EmailEnv/CronEnv) → wrangler.toml and/or cron/wrangler.toml → .dev.vars.example | baseEnv in tests/api.integration.test.ts:86 |
+| DB schema | schema.sql → migrations/NNN_name.sql (additive, numbered) → REQ_COLS/FIRM_COLS in server/app.ts → src/lib/types.ts | tests/api.integration.test.ts |
+| env var / binding | server/types.ts Env (or MailEnv/EmailEnv/CronEnv) → wrangler.toml and/or cron/wrangler.toml → .dev.vars.example | `baseEnv` in tests/api.integration.test.ts |
 | UI string | src/locales/en.json + ar.json (same key) | npm run typecheck |
 | reminder cadence / send windows | shared/reminders.ts, shared/schedule.ts | tests/shared.test.ts + cron tests in integration |
 | email template / provider | shared/emailTemplates.ts, shared/email.ts, shared/mailer.ts | tests/shared.test.ts "emails and WhatsApp" |
@@ -29,37 +29,40 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 
 ## Gotchas (verified against code)
 - `tests/` is in no tsconfig: `npm run typecheck` never checks test files; vitest only transpiles.
-- The Neon driver is faked in tests (tests/api.integration.test.ts:7-55): `sql.unsafe`, `sql.transaction`, array params run on PGlite, not Neon. Say "unverified on Neon".
-- Date columns are cast `::text` in SELECTs (REQ_COLS server/app.ts:43, cron query) to avoid TZ shifts; do the same for new date columns.
-- Firm routes scope by `firm_id = ${firm.id}`, or check request ownership first then query by request id (server/app.ts:260).
-- Clerk `authorizedParties` = origin of APP_URL + EXTRA_ORIGINS (server/app.ts:61); locally APP_URL must be the Vite origin.
+- The Neon driver is faked in tests (`vi.hoisted` + `vi.mock` at the top of tests/api.integration.test.ts): `sql.unsafe`, `sql.transaction`, array params run on PGlite, not Neon. Say "unverified on Neon".
+- Date columns are cast `::text` in SELECTs (`REQ_COLS`, `FIRM_COLS`, cron query) to avoid TZ shifts; do the same for new date columns.
+- Firm routes scope by `firm_id = ${firm.id}`, or check request ownership first then query by request id (`PATCH /requests/:id/items/:itemId`).
+- Clerk `authorizedParties` = origin of APP_URL + EXTRA_ORIGINS (`requireUser`); locally APP_URL must be the Vite origin.
 - Arabic lives in four places: src/locales/ar.json, shared/packs.ts labels, shared/emailTemplates.ts, shared/messages.ts.
 - i18n.tsx:169-170 catches keys missing from ar.json but not extra ones; the i18n region below catches both.
 - Upload limits are duplicated client-side (ClientUpload.tsx) and server-side (app.ts); change both.
 - Cron applies the send window in JS after `limit 200` (cron/src/index.ts:28,34).
+- Billing: Dodo webhooks are verified in shared/billing.ts before parsing; `billing_events` makes them idempotent; `firms.plan` is the only access switch (cron sends for trial/active/past_due).
 - LINK_SECRET must be identical for Pages and cron, which builds client links in reminder emails.
 
 ## files
 <!-- gen:files:start -->
 | file | lines | purpose |
 |---|---|---|
-| `.dev.vars.example` | 7 | server secret names for wrangler (local) |
+| `.dev.vars.example` | 9 | server secret names for wrangler (local) |
 | `.env.example` | 2 | Vite browser var names |
 | `CLAUDE.md` | 14 | always-on agent rules → scoped-dev skill |
-| `README.md` | 96 | setup, deploy, known gaps |
+| `README.md` | 103 | setup, deploy, known gaps |
 | `cron/src/index.ts` | 66 | reminder Worker: runReminders + scheduled handler |
 | `cron/tsconfig.json` | 15 | tsconfig for cron + shared |
 | `cron/wrangler.toml` | 19 | cron Worker config (hourly trigger, vars) |
 | `functions/api/[[route]].ts` | 5 | Pages Functions entry → server/app.ts |
 | `index.html` | 22 | SPA shell, Google Fonts links |
-| `package.json` | 37 | scripts + deps |
+| `migrations/001_billing.sql` | 12 | billing columns on firms + billing_events (additive) |
+| `package.json` | 38 | scripts + deps |
 | `public/_headers` | 12 | static security/cache headers (/r/*, /assets/*) |
 | `public/_redirects` | 1 | SPA fallback |
 | `public/_routes.json` | 1 | only /api/* runs Functions |
-| `schema.sql` | 73 | full DB schema (tests load it) |
-| `server/app.ts` | 424 | Hono API: firm routes, client routes, upload rules |
+| `schema.sql` | 86 | full DB schema (tests load it) |
+| `server/app.ts` | 513 | Hono API: firm routes, client routes, upload rules |
 | `server/tsconfig.json` | 15 | tsconfig for server + functions + shared |
-| `server/types.ts` | 25 | Env bindings, FirmRow, Hono Vars |
+| `server/types.ts` | 34 | Env bindings, FirmRow, Hono Vars |
+| `shared/billing.ts` | 70 | Dodo webhook signature check, event → plan mapping, API base URL |
 | `shared/email.ts` | 73 | sendEmail via Resend or SES |
 | `shared/emailTemplates.ts` | 70 | request/complete email HTML+text, EN/AR |
 | `shared/mailer.ts` | 64 | buildLink, daily cap, deliverRequestEmail |
@@ -76,21 +79,21 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 | `src/i18n.tsx` | 72 | I18nProvider, t(), compile-time key parity |
 | `src/lib/api.ts` | 52 | useApi: Clerk Bearer fetch + download |
 | `src/lib/format.ts` | 7 | todayIso, fileSize |
-| `src/lib/types.ts` | 52 | UI-side API row types |
-| `src/locales/ar.json` | 95 | Arabic UI strings |
-| `src/locales/en.json` | 95 | English UI strings |
+| `src/lib/types.ts` | 54 | UI-side API row types |
+| `src/locales/ar.json` | 109 | Arabic UI strings |
+| `src/locales/en.json` | 109 | English UI strings |
 | `src/main.tsx` | 10 | React entry |
 | `src/pages/ClientUpload.tsx` | 218 | client upload page (main surface) |
 | `src/pages/Dashboard.tsx` | 93 | request list + email cap hint |
 | `src/pages/NewRequest.tsx` | 154 | create request from template |
 | `src/pages/RequestDetail.tsx` | 188 | review items, approve/reject, rotate, archive |
-| `src/pages/Settings.tsx` | 90 | firm settings form |
+| `src/pages/Settings.tsx` | 150 | firm settings form |
 | `src/styles.css` | 160 | design tokens + all styles |
-| `tests/api.integration.test.ts` | 345 | API + cron on PGlite (Neon/Clerk/R2/email faked) |
-| `tests/shared.test.ts` | 156 | unit tests for shared/* |
+| `tests/api.integration.test.ts` | 450 | API + cron on PGlite (Neon/Clerk/R2/email faked) |
+| `tests/shared.test.ts` | 189 | unit tests for shared/* |
 | `tsconfig.json` | 16 | tsconfig for src + shared + vite.config |
 | `vite.config.ts` | 10 | Vite build + /api proxy to :8788 |
-| `wrangler.toml` | 26 | Pages config: R2 binding, vars |
+| `wrangler.toml` | 30 | Pages config: R2 binding, vars |
 <!-- gen:files:end -->
 
 ## modules
@@ -101,10 +104,11 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 | `functions/api/[[route]].ts` | onRequest | - |
 | `server/app.ts` | app | functions/api/[[route]].ts, tests/api.integration.test.ts |
 | `server/types.ts` | Env, FirmRow, Vars | server/app.ts (+2 transitive) |
+| `shared/billing.ts` | dodoBaseUrl, planForEvent, verifyWebhook | server/app.ts, tests/shared.test.ts (+2 transitive) |
 | `shared/email.ts` | EmailEnv, EmailError, EmailMessage, sendEmail | cron/src/index.ts, server/app.ts, shared/mailer.ts (+3 transitive) |
 | `shared/emailTemplates.ts` | CompleteEmailInput, RequestEmailInput, completeEmail, esc, requestEmail | server/app.ts, shared/mailer.ts, tests/shared.test.ts (+4 transitive) |
 | `shared/mailer.ts` | MailEnv, ReqForMail, Sql, buildLink, capRemaining, deliverRequestEmail | cron/src/index.ts, server/app.ts, server/types.ts (+2 transitive) |
-| `shared/messages.ts` | MessageInput, formatDate, waLink, waMessage | shared/emailTemplates.ts, src/components/ClientActions.tsx, src/pages/ClientUpload.tsx, src/pages/Dashboard.tsx, src/pages/RequestDetail.tsx, tests/shared.test.ts (+9 transitive) |
+| `shared/messages.ts` | MessageInput, formatDate, waLink, waMessage | shared/emailTemplates.ts, src/components/ClientActions.tsx, src/pages/ClientUpload.tsx, src/pages/Dashboard.tsx, src/pages/RequestDetail.tsx, src/pages/Settings.tsx, tests/shared.test.ts (+9 transitive) |
 | `shared/packs.ts` | ALL_TEMPLATES, ChecklistItem, DeadlineRule, Lang, REGIONS, Region, Template, getTemplate, suggestDueDate, templatesForRegion | cron/src/index.ts, server/app.ts, server/types.ts, shared/emailTemplates.ts, shared/mailer.ts, shared/messages.ts, shared/schedule.ts, src/lib/types.ts, src/pages/NewRequest.tsx, src/pages/Settings.tsx, tests/shared.test.ts (+9 transitive) |
 | `shared/reminders.ts` | MAX_REMINDERS, ReminderInput, nextReminderAt | shared/mailer.ts, tests/shared.test.ts (+5 transitive) |
 | `shared/schedule.ts` | SEND_WINDOWS, inSendWindow | cron/src/index.ts, tests/shared.test.ts (+1 transitive) |
@@ -128,29 +132,31 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 
 ## tests
 <!-- gen:tests:start -->
-- `npx vitest run tests/api.integration.test.ts` reaches: cron/src/index.ts, server/app.ts, server/types.ts, shared/email.ts, shared/emailTemplates.ts, shared/mailer.ts, shared/messages.ts, shared/packs.ts, shared/reminders.ts, shared/schedule.ts, shared/tokens.ts
-- `npx vitest run tests/shared.test.ts` reaches: shared/emailTemplates.ts, shared/messages.ts, shared/packs.ts, shared/reminders.ts, shared/schedule.ts, shared/tokens.ts
+- `npx vitest run tests/api.integration.test.ts` reaches: cron/src/index.ts, server/app.ts, server/types.ts, shared/billing.ts, shared/email.ts, shared/emailTemplates.ts, shared/mailer.ts, shared/messages.ts, shared/packs.ts, shared/reminders.ts, shared/schedule.ts, shared/tokens.ts
+- `npx vitest run tests/shared.test.ts` reaches: shared/billing.ts, shared/emailTemplates.ts, shared/messages.ts, shared/packs.ts, shared/reminders.ts, shared/schedule.ts, shared/tokens.ts
 <!-- gen:tests:end -->
 
 ## routes
 <!-- gen:routes:start -->
 | method | path | where |
 |---|---|---|
-| GET | `/api/app/me` | server/app.ts:81 |
-| PUT | `/api/app/firm` | server/app.ts:86 |
-| GET | `/api/app/requests` | server/app.ts:104 |
-| POST | `/api/app/requests` | server/app.ts:120 |
-| GET | `/api/app/requests/:id` | server/app.ts:172 |
-| PATCH | `/api/app/requests/:id` | server/app.ts:190 |
-| POST | `/api/app/requests/:id/send` | server/app.ts:207 |
-| POST | `/api/app/requests/:id/rotate-link` | server/app.ts:239 |
-| PATCH | `/api/app/requests/:id/items/:itemId` | server/app.ts:249 |
-| GET | `/api/app/files/:id` | server/app.ts:267 |
-| GET | `/api/public/:token` | server/app.ts:337 |
-| PUT | `/api/public/:token/items/:itemId/upload` | server/app.ts:356 |
-| DELETE | `/api/public/:token/files/:fileId` | server/app.ts:391 |
-| GET | `/api/health` | server/app.ts:412 |
-| POST | `/api/billing/webhook` | server/app.ts:418 |
+| GET | `/api/app/me` | server/app.ts:83 |
+| PUT | `/api/app/firm` | server/app.ts:93 |
+| GET | `/api/app/requests` | server/app.ts:111 |
+| POST | `/api/app/requests` | server/app.ts:127 |
+| GET | `/api/app/requests/:id` | server/app.ts:179 |
+| PATCH | `/api/app/requests/:id` | server/app.ts:197 |
+| POST | `/api/app/requests/:id/send` | server/app.ts:214 |
+| POST | `/api/app/requests/:id/rotate-link` | server/app.ts:246 |
+| PATCH | `/api/app/requests/:id/items/:itemId` | server/app.ts:256 |
+| GET | `/api/app/files/:id` | server/app.ts:274 |
+| POST | `/api/app/billing/checkout` | server/app.ts:308 |
+| POST | `/api/app/billing/portal` | server/app.ts:327 |
+| GET | `/api/public/:token` | server/app.ts:389 |
+| PUT | `/api/public/:token/items/:itemId/upload` | server/app.ts:408 |
+| DELETE | `/api/public/:token/files/:fileId` | server/app.ts:443 |
+| GET | `/api/health` | server/app.ts:464 |
+| POST | `/api/billing/webhook` | server/app.ts:469 |
 | SPA | `/r/:token` | src/App.tsx:11 |
 | SPA | `/*` | src/App.tsx:19 |
 | SPA | `/` | src/PreparerApp.tsx:30 |
@@ -161,25 +167,26 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 
 ## db
 <!-- gen:db:start -->
-- **firms** (schema.sql:3): id uuid, owner_user_id text, name text, region text, language text, plan text, notify_email text, reply_to text, created_at timestamptz
-- **requests** (schema.sql:17): id uuid, firm_id uuid→firms, client_name text, client_email text, client_phone text, language text, template_id text, title text, due_date date, link_version integer, status text, initial_sent_at timestamptz, reminders_sent integer, last_reminder_at timestamptz, next_reminder_at timestamptz, created_at timestamptz
-- **request_items** (schema.sql:38): id uuid, request_id uuid→requests, position integer, key text, label_en text, label_ar text, required boolean, status text, note text
-- **files** (schema.sql:52): id uuid, request_id uuid→requests, item_id uuid→request_items, r2_key text, original_name text, content_type text, size_bytes bigint, uploaded_at timestamptz
-- **email_log** (schema.sql:65): id bigserial, request_id uuid→requests, to_email text, kind text, provider text, sent_at timestamptz
+- **firms** (schema.sql:3): id uuid, owner_user_id text, name text, region text, language text, plan text, notify_email text, reply_to text, billing_customer_id text, billing_subscription_id text, current_period_end timestamptz, canceled_at timestamptz, billing_event_at timestamptz, created_at timestamptz
+- **requests** (schema.sql:23): id uuid, firm_id uuid→firms, client_name text, client_email text, client_phone text, language text, template_id text, title text, due_date date, link_version integer, status text, initial_sent_at timestamptz, reminders_sent integer, last_reminder_at timestamptz, next_reminder_at timestamptz, created_at timestamptz
+- **request_items** (schema.sql:44): id uuid, request_id uuid→requests, position integer, key text, label_en text, label_ar text, required boolean, status text, note text
+- **files** (schema.sql:58): id uuid, request_id uuid→requests, item_id uuid→request_items, r2_key text, original_name text, content_type text, size_bytes bigint, uploaded_at timestamptz
+- **email_log** (schema.sql:71): id bigserial, request_id uuid→requests, to_email text, kind text, provider text, sent_at timestamptz
+- **billing_events** (schema.sql:82): id text, type text, received_at timestamptz
 - indexes: requests_firm_idx(requests), requests_due_idx(requests), items_request_idx(request_items), files_request_idx(files), files_item_idx(files), email_log_sent_idx(email_log)
 <!-- gen:db:end -->
 
 ## env
 <!-- gen:env:start -->
 - `CronEnv` (cron/src/index.ts) extends EmailEnv, MailEnv: DATABASE_URL
-- `Env` (server/types.ts) extends MailEnv: BUCKET, DATABASE_URL, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, TRIAL_REQUEST_LIMIT, EXTRA_ORIGINS
+- `Env` (server/types.ts) extends MailEnv: BUCKET, DATABASE_URL, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, TRIAL_REQUEST_LIMIT, EXTRA_ORIGINS, DODO_API_KEY, DODO_WEBHOOK_KEY, DODO_ENV, DODO_PRODUCT_FIRM_MONTHLY, DODO_PRODUCT_FIRM_YEARLY
 - `EmailEnv` (shared/email.ts): EMAIL_PROVIDER, EMAIL_FROM, RESEND_API_KEY, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 - `MailEnv` (shared/mailer.ts) extends EmailEnv: APP_URL, LINK_SECRET, DAILY_EMAIL_CAP
 - cron/wrangler.toml [triggers]: crons
 - cron/wrangler.toml [vars]: APP_URL, EMAIL_PROVIDER, EMAIL_FROM, DAILY_EMAIL_CAP
 - wrangler.toml [r2_buckets]: BUCKET
-- wrangler.toml [vars]: APP_URL, EMAIL_PROVIDER, EMAIL_FROM, DAILY_EMAIL_CAP, TRIAL_REQUEST_LIMIT
-- .dev.vars.example: DATABASE_URL, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, LINK_SECRET, APP_URL, RESEND_API_KEY
+- wrangler.toml [vars]: APP_URL, EMAIL_PROVIDER, EMAIL_FROM, DAILY_EMAIL_CAP, TRIAL_REQUEST_LIMIT, DODO_ENV, DODO_PRODUCT_FIRM_MONTHLY, DODO_PRODUCT_FIRM_YEARLY
+- .dev.vars.example: DATABASE_URL, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, LINK_SECRET, APP_URL, RESEND_API_KEY, DODO_API_KEY, DODO_WEBHOOK_KEY
 - .env.example: VITE_CLERK_PUBLISHABLE_KEY
 - browser (Vite): VITE_CLERK_PUBLISHABLE_KEY (src/PreparerApp.tsx)
 <!-- gen:env:end -->
@@ -197,8 +204,8 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 
 ## i18n
 <!-- gen:i18n:start -->
-- src/locales/ar.json: 93 keys (parity ok)
-- src/locales/en.json: 93 keys (parity ok)
+- src/locales/ar.json: 107 keys (parity ok)
+- src/locales/en.json: 107 keys (parity ok)
 <!-- gen:i18n:end -->
 
 ## templates

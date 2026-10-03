@@ -63,18 +63,25 @@ Free Resend stops at 100 emails a day, so the default cap is 90. To move to Amaz
 emails, needs an AWS production-access request): set `EMAIL_PROVIDER = "ses"` in both toml files, add
 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` and `AWS_REGION` as secrets for both projects, and raise `DAILY_EMAIL_CAP`.
 
-## Billing is not built
+## Billing (Dodo Payments)
 
-Every firm starts on `plan = 'trial'`, limited to `TRIAL_REQUEST_LIMIT` open requests (default 25).
-While you validate, activate a firm by hand:
+Every firm starts on `plan = 'trial'`, limited to `TRIAL_REQUEST_LIMIT` open requests (default 25). Firms upgrade from
+**Settings → Billing**, which opens a Dodo Payments hosted checkout (monthly or yearly). Dodo is the merchant of record.
+
+- Config: `DODO_ENV` (`test_mode` / `live_mode`), `DODO_PRODUCT_FIRM_MONTHLY`, `DODO_PRODUCT_FIRM_YEARLY` in `wrangler.toml`;
+  secrets `DODO_API_KEY` and `DODO_WEBHOOK_KEY` on the Pages project.
+- Webhook: point Dodo at `https://<your app>/api/billing/webhook`. Signatures are verified (Standard Webhooks) before
+  anything is parsed; each `webhook-id` is processed once.
+- Plans: `subscription.active` / `renewed` / `plan_changed` → `active`; `past_due` → `past_due` (still works, shows a
+  banner); `on_hold` / `cancelled` / `expired` → `canceled` (no new requests or reminders; existing client links keep
+  working for 30 days). Set the grace period for failed payments in the Dodo dashboard.
+- Existing databases: run `migrations/001_billing.sql`.
+
+To activate a firm by hand (for example a founding member paid another way):
 
 ```sql
 update firms set plan = 'active' where owner_user_id = 'user_xxx';  -- the Clerk user id
 ```
-
-`POST /api/billing/webhook` is a stub that returns 501. When you pick a merchant of record that pays out to your
-country, verify its webhook signature there and map its events to `firms.plan` (`active`, `past_due`, `canceled`).
-Canceled firms stop getting reminders and their client links stop working.
 
 ## Before you launch
 

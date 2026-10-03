@@ -11,6 +11,12 @@ create table if not exists firms (
   plan           text not null default 'trial' check (plan in ('trial','active','past_due','canceled')),
   notify_email   text,                                 -- told when a client finishes uploading
   reply_to       text,                                 -- where client replies to reminders go
+  -- Billing (Dodo Payments). plan above stays the single source of what a firm may do.
+  billing_customer_id      text,
+  billing_subscription_id  text,
+  current_period_end       timestamptz,
+  canceled_at              timestamptz,               -- client links keep working for 30 days after this
+  billing_event_at         timestamptz,               -- timestamp of the newest applied webhook (ignore older ones)
   created_at     timestamptz not null default now()
 );
 
@@ -71,3 +77,10 @@ create table if not exists email_log (
   sent_at     timestamptz not null default now()
 );
 create index if not exists email_log_sent_idx on email_log (sent_at);
+
+-- Webhook deliveries already handled (Dodo's webhook-id), so retries are ignored.
+create table if not exists billing_events (
+  id           text primary key,
+  type         text not null,
+  received_at  timestamptz not null default now()
+);

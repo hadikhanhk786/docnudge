@@ -1,4 +1,6 @@
+import { Webhook } from 'standardwebhooks';
 import { describe, expect, it } from 'vitest';
+import { planForEvent, verifyWebhook } from '../shared/billing';
 import { completeEmail, requestEmail } from '../shared/emailTemplates';
 import { waLink, waMessage } from '../shared/messages';
 import { ALL_TEMPLATES, REGIONS, getTemplate, suggestDueDate } from '../shared/packs';
@@ -152,5 +154,36 @@ describe('emails and WhatsApp', () => {
     expect(text).toContain(base.link);
     expect(waLink('971501234567', text).startsWith('https://wa.me/971501234567?text=')).toBe(true);
     expect(waLink(null, text).startsWith('https://wa.me/?text=')).toBe(true);
+  });
+});
+
+describe('Dodo webhooks', () => {
+  const secret = `whsec_${btoa('unit-test-signing-key-0123456789')}`;
+  const body = '{"type":"subscription.active","data":{}}';
+  const at = new Date('2026-10-03T10:00:00Z');
+  const now = at.getTime() / 1000;
+  const headers = (signature: string, timestamp = String(now)) => ({ id: 'msg_1', timestamp, signature });
+
+  it('accepts a signature made by the Standard Webhooks reference library', async () => {
+    const sig = new Webhook(secret).sign('msg_1', at, body);
+    expect(await verifyWebhook(secret, headers(sig), body, now)).toBe(true);
+    expect(await verifyWebhook(secret, headers(`v1,AAAA ${sig}`), body, now)).toBe(true); // any listed signature may match
+  });
+
+  it('rejects a changed body, a wrong key, a missing header or an old timestamp', async () => {
+    const sig = new Webhook(secret).sign('msg_1', at, body);
+    expect(await verifyWebhook(secret, headers(sig), body.replace('active', 'expired'), now)).toBe(false);
+    expect(await verifyWebhook(`whsec_${btoa('another-key-another-key-another')}`, headers(sig), body, now)).toBe(false);
+    expect(await verifyWebhook(secret, { id: 'msg_1', timestamp: String(now), signature: undefined }, body, now)).toBe(false);
+    expect(await verifyWebhook(secret, headers(sig), body, now + 301)).toBe(false);
+  });
+
+  it('maps subscription events to plans', () => {
+    expect(planForEvent('subscription.renewed', 'active')).toBe('active');
+    expect(planForEvent('subscription.past_due', 'past_due')).toBe('past_due');
+    expect(planForEvent('subscription.on_hold', 'on_hold')).toBe('canceled');
+    expect(planForEvent('subscription.updated', 'expired')).toBe('canceled');
+    expect(planForEvent('subscription.updated', 'paused')).toBeNull();
+    expect(planForEvent('payment.failed', undefined)).toBeNull();
   });
 });

@@ -3,28 +3,28 @@
 FACT = true in the code today (cited). RULE = required for new work; the code may not fully follow it yet.
 
 ## Security and privacy
-- FACT: every `/api/app/*` query filters by `firm_id = ${firm.id}`, or first checks the request belongs to the firm and then queries by request id (server/app.ts:260-262, files join at :272). New firm routes do the same.
-- FACT: client links are `requestId.version.hmac` (shared/tokens.ts); the signature is checked before any DB hit (server/app.ts:304); "replace link" bumps `requests.link_version`; archived requests and canceled firms resolve to 404 (:313).
+- FACT: every `/api/app/*` query filters by `firm_id = ${firm.id}`, or first checks the request belongs to the firm and then queries by request id (`PATCH /requests/:id/items/:itemId`, `GET /files/:id` in server/app.ts). New firm routes do the same.
+- FACT: client links are `requestId.version.hmac` (shared/tokens.ts); the signature is checked before any DB hit (`resolveToken` in server/app.ts); "replace link" bumps `requests.link_version`; archived requests resolve to 404; a canceled firm's links keep working for 30 days after `firms.canceled_at`, then 404 (`resolveToken`).
 - FACT: `/r/:token` renders outside Clerk (src/App.tsx:11); the client page must never import Clerk or `src/lib/api.ts`.
-- FACT: R2 keys are `firmId/requestId/itemId/fileId`, never a user-supplied name (server/app.ts:379). Downloads are owner-only attachments with `nosniff` (:277-284).
-- FACT: `/api/public/*` responses are `no-store` + `noindex` (server/app.ts:331-335); `/r/*` too (public/_headers).
-- RULE: logs carry no tokens, PII, emails or file names. Gap: `cron/src/index.ts:52` logs the provider error text, which may echo an address; the file name travels in the upload URL query (`?name=`).
+- FACT: R2 keys are `firmId/requestId/itemId/fileId`, never a user-supplied name (upload route in server/app.ts). Downloads are owner-only attachments with `nosniff` (`GET /files/:id`).
+- FACT: `/api/public/*` responses are `no-store` + `noindex` (`pub.use` middleware in server/app.ts); `/r/*` too (public/_headers).
+- RULE: logs carry no tokens, PII, emails, file names or webhook payloads. Gap: `cron/src/index.ts:52` logs the provider error text, which may echo an address; the file name travels in the upload URL query (`?name=`).
 - RULE: nothing secret in URLs except the signed client token. No analytics or third-party trackers on the client page.
 - RULE: never read, print or commit `.dev.vars`, `.env` or secret values; refer to env vars by name.
 
 ## Uploads
-- FACT: allowlist of MIME types in `ALLOWED_TYPES` (server/app.ts:17-30), no html/svg; 25 MB cap checked on Content-Length and on the bytes (:364-375); max 10 files per item (:16, :371).
+- FACT: allowlist of MIME types in `ALLOWED_TYPES` (server/app.ts), no html/svg; 25 MB cap checked on Content-Length and on the bytes (upload route); max 10 files per item (`MAX_FILES_PER_ITEM`).
 - FACT: the client mirrors the cap and the extension→type map (src/pages/ClientUpload.tsx `MAX_BYTES`, `TYPE_BY_EXT`, `accept`). RULE: change both sides together.
 
 ## Data and SQL
-- FACT: Neon tagged templates (`sql\`...\``) only; dynamic SQL only via `sql.unsafe` with constant column lists (REQ_COLS / FIRM_COLS, server/app.ts:42-44).
-- FACT: date columns are selected as `::text` (YYYY-MM-DD) to avoid time-zone shifts (server/app.ts:43, cron/src/index.ts:18).
-- FACT: `schema.sql` is the full current schema and the integration tests load it (tests/api.integration.test.ts:143).
-- RULE: schema changes also add an additive, numbered file `migrations/NNN_name.sql` for existing databases (folder does not exist yet). Nothing destructive without the owner's OK.
-- RULE: multi-statement writes that must succeed together use `sql.transaction([...])` (pattern: server/app.ts:147, :381).
+- FACT: Neon tagged templates (`sql\`...\``) only; dynamic SQL only via `sql.unsafe` with constant column lists (`REQ_COLS` / `FIRM_COLS`, server/app.ts).
+- FACT: date columns are selected as `::text` (YYYY-MM-DD) to avoid time-zone shifts (`REQ_COLS`, `FIRM_COLS`, the cron query).
+- FACT: `schema.sql` is the full current schema and the integration tests load it (`beforeAll` in tests/api.integration.test.ts).
+- RULE: schema changes also add an additive, numbered file `migrations/NNN_name.sql` for existing databases (FACT since 001_billing.sql). Nothing destructive without the owner's OK.
+- RULE: multi-statement writes that must succeed together use `sql.transaction([...])` (pattern: `POST /requests`, the upload route, the billing webhook).
 
 ## Tests
-- FACT: API and SQL behaviour is tested on PGlite with the real schema; Neon transport, Clerk, R2 and email are faked (tests/api.integration.test.ts:1-2).
+- FACT: API and SQL behaviour is tested on PGlite with the real schema; Neon transport, Clerk, R2 and email are faked (header of tests/api.integration.test.ts).
 - RULE: API/SQL changes add or update a test in tests/api.integration.test.ts; pure logic in shared/ gets a unit test in tests/shared.test.ts.
 - RULE: behaviour that only the fakes cover is reported as "unverified on the live service".
 

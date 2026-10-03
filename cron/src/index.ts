@@ -23,7 +23,7 @@ export async function runReminders(env: CronEnv, now: Date = new Date()): Promis
       and r.initial_sent_at is not null
       and r.next_reminder_at is not null
       and r.next_reminder_at <= now()
-      and f.plan in ('trial', 'active')
+      and f.plan in ('trial', 'active', 'past_due')
     order by r.next_reminder_at asc
     limit 200`;
 
