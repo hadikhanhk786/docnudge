@@ -72,7 +72,7 @@ function importsOf(rel, text) {
 }
 
 /** Exported symbol names of a code file ('default' for a default export). */
-function exportsOf(text) {
+export function exportsOf(text) {
   const names = new Set();
   for (const m of text.matchAll(/^export\s+(?:declare\s+)?(default\s+)?(?:async\s+)?(?:function\*?|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/gm)) {
     names.add(m[1] ? 'default' : m[2]);

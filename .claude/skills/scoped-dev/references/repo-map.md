@@ -16,7 +16,7 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 ## Where to change X
 | change | files, in order | test |
 |---|---|---|
-| region template | shared/packs.ts (new region also: Region type, REGIONS, schema.sql firms.region check, shared/schedule.ts, `region_xx` locale keys) | tests/shared.test.ts "region packs" |
+| region template | shared/packs.ts (new region also: Region type, REGIONS, schema.sql firms.region check, shared/schedule.ts, `region_xx` locale keys) | tests/shared.test.ts "region packs"; ae.vat item count is also asserted in tests/api.integration.test.ts:203 |
 | API route | server/app.ts (`authed` or `pub`) → src/lib/types.ts → page | tests/api.integration.test.ts |
 | DB schema | schema.sql → migrations/NNN_name.sql (rule, folder not created yet) → REQ_COLS/FIRM_COLS in server/app.ts → src/lib/types.ts | tests/api.integration.test.ts |
 | env var / binding | server/types.ts Env (or MailEnv/EmailEnv/CronEnv) → wrangler.toml and/or cron/wrangler.toml → .dev.vars.example | baseEnv in tests/api.integration.test.ts:86 |

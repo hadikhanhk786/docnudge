@@ -6,7 +6,7 @@
 // 4. diff stat + export lines added, so each addition gets a named caller
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
-import { CODE, ROOT, buildGraph, listFiles, read, sortStr } from './scan.mjs';
+import { CODE, ROOT, buildGraph, exportsOf, listFiles, read, sortStr } from './scan.mjs';
 
 // Entry points whose exports are consumed by a runtime, not an import.
 const ENTRY_EXPORTS = new Set(['functions/api/[[route]].ts:onRequest', 'cron/src/index.ts:default', 'vite.config.ts:default']);
@@ -54,6 +54,19 @@ for (const e of tcNew) console.log(`  ${e}`);
 findings += tcNew.length;
 
 // ---------------------------------------------------------------- 2. unused exports
+// Export lines this change added: [file, line]. Only these can be new unused exports.
+const untracked = changed === null ? [] : (git('ls-files', '--others', '--exclude-standard') ?? '').split('\n').filter(Boolean);
+const addedExports = [];
+if (changed !== null) {
+  let file = '';
+  for (const line of (git('diff', '-U0', 'HEAD') ?? '').split('\n')) {
+    if (line.startsWith('+++ ')) file = line.slice(6);
+    else if (/^\+\s*export\b/.test(line) && CODE.test(file)) addedExports.push([file, line.slice(1).trim()]);
+  }
+  for (const f of untracked.filter((x) => CODE.test(x))) {
+    for (const line of read(f).split('\n')) if (/^\s*export\b/.test(line)) addedExports.push([f, line.trim()]);
+  }
+}
 const g = buildGraph(listFiles());
 const unused = [];
 for (const f of g.code) {
@@ -63,8 +76,8 @@ for (const f of g.code) {
     if (!used.has('*') && !used.has(name) && !ENTRY_EXPORTS.has(`${f}:${name}`)) unused.push([f, name]);
   }
 }
-const unusedNew = unused.filter(([f]) => inScope(f));
-console.log(`unused exports (heuristic): ${unusedNew.length} in changed files, ${unused.length - unusedNew.length} pre-existing elsewhere`);
+const unusedNew = changed === null ? unused : unused.filter(([f, n]) => addedExports.some(([af, l]) => af === f && exportsOf(l).includes(n)));
+console.log(`unused exports (heuristic): ${unusedNew.length} added by this change, ${unused.length - unusedNew.length} pre-existing`);
 for (const [f, n] of unusedNew) console.log(`  ${f}: ${n}`);
 findings += unusedNew.length;
 
@@ -83,21 +96,11 @@ if (allowArg !== null) {
 // ---------------------------------------------------------------- 4. diff summary
 if (changed !== null) {
   const stat = (git('diff', '--stat', 'HEAD') ?? '').trimEnd();
-  const untracked = (git('ls-files', '--others', '--exclude-standard') ?? '').split('\n').filter(Boolean);
   console.log(`diff: ${changed.length} file(s) changed`);
   if (stat) console.log(stat.replace(/^/gm, '  '));
   for (const f of untracked) console.log(`  (new) ${f}`);
-  const added = [];
-  let file = '';
-  for (const line of (git('diff', '-U0', 'HEAD') ?? '').split('\n')) {
-    if (line.startsWith('+++ ')) file = line.slice(6);
-    else if (/^\+\s*export\b/.test(line) && CODE.test(file)) added.push(`${file}: ${line.slice(1).trim().slice(0, 100)}`);
-  }
-  for (const f of untracked.filter((x) => CODE.test(x))) {
-    for (const line of read(f).split('\n')) if (/^\s*export\b/.test(line)) added.push(`${f}: ${line.trim().slice(0, 100)}`);
-  }
-  console.log(`export lines added: ${added.length}${added.length ? ' (name a caller for each)' : ''}`);
-  for (const a of added) console.log(`  ${a}`);
+  console.log(`export lines added: ${addedExports.length}${addedExports.length ? ' (name a caller for each)' : ''}`);
+  for (const [f, l] of addedExports) console.log(`  ${f}: ${l.slice(0, 100)}`);
 }
 
 console.log(findings ? `check: ${findings} finding(s)` : 'check: OK');
