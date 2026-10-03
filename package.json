@@ -1,5 +1,5 @@
 {
-  "name": "docchase",
+  "name": "docnudge",
   "version": "0.1.0",
   "scripts": {
     "predev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\"",
@@ -7,7 +7,7 @@
     "build": "vite build",
     "typecheck": "tsc -p tsconfig.json && tsc -p server/tsconfig.json && tsc -p cron/tsconfig.json",
     "test": "vitest run",
-    "deploy": "npm run build && wrangler pages deploy dist --project-name docchase",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name docnudge",
     "deploy:cron": "wrangler deploy --config cron/wrangler.toml"
   },
   "private": true,

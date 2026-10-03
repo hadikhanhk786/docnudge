@@ -1,4 +1,4 @@
-# Repo map (DocChase)
+# Repo map (DocNudge)
 
 Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex parsing). The map says where; the source says what. If they disagree, trust the source and refresh the map. Everything outside the markers is hand-written and preserved.
 
@@ -191,7 +191,7 @@ Generated regions are owned by `scripts/repo-map.mjs --write` (heuristic regex p
 - `npm run build`: vite build
 - `npm run typecheck`: tsc -p tsconfig.json && tsc -p server/tsconfig.json && tsc -p cron/tsconfig.json
 - `npm run test`: vitest run
-- `npm run deploy`: npm run build && wrangler pages deploy dist --project-name docchase
+- `npm run deploy`: npm run build && wrangler pages deploy dist --project-name docnudge
 - `npm run deploy:cron`: wrangler deploy --config cron/wrangler.toml
 <!-- gen:scripts:end -->
 

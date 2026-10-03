@@ -1,5 +1,5 @@
 # Separate Worker that sends reminder emails on a schedule (Pages can't run cron triggers).
-name = "docchase-cron"
+name = "docnudge-cron"
 main = "src/index.ts"
 compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
@@ -9,9 +9,9 @@ compatibility_flags = ["nodejs_compat"]
 crons = ["0 * * * *"]
 
 [vars]
-APP_URL = "https://docchase.pages.dev"
+APP_URL = "https://docnudge.pages.dev"
 EMAIL_PROVIDER = "resend"
-EMAIL_FROM = "DocChase <hello@example.com>"
+EMAIL_FROM = "DocNudge <hello@example.com>"
 DAILY_EMAIL_CAP = "90"
 
 # Secrets (run from the cron folder or pass --config cron/wrangler.toml):

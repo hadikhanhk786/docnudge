@@ -120,7 +120,7 @@ describe('emails and WhatsApp', () => {
     clientName: 'Sam <b>',
     firmName: 'Acme CPA',
     title: '2026 return',
-    link: 'https://docchase.test/r/abc',
+    link: 'https://docnudge.test/r/abc',
     dueDate: '2027-04-15',
     remaining: 3,
   };
@@ -144,8 +144,8 @@ describe('emails and WhatsApp', () => {
     expect(/[\u0600-\u06FF]/.test(m.subject)).toBe(true);
   });
   it('completion email links to the request', () => {
-    const m = completeEmail({ lang: 'en', clientName: 'Sam', title: '2026 return', link: 'https://docchase.test/request/1' });
-    expect(m.html).toContain('https://docchase.test/request/1');
+    const m = completeEmail({ lang: 'en', clientName: 'Sam', title: '2026 return', link: 'https://docnudge.test/request/1' });
+    expect(m.html).toContain('https://docnudge.test/request/1');
   });
   it('builds WhatsApp links with and without a phone number', () => {
     const text = waMessage('en', { clientName: 'Sam', firmName: 'Acme CPA', title: '2026 return', link: base.link, dueDate: null });

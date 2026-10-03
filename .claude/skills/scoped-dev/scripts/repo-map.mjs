@@ -171,7 +171,7 @@ function genTemplates(files) {
 }
 
 // ---------------------------------------------------------------- assemble
-const HEADER = `# Repo map (DocChase)
+const HEADER = `# Repo map (DocNudge)
 
 Generated regions are owned by \`scripts/repo-map.mjs --write\` (heuristic regex parsing). The map says where; the source says what. If they disagree, trust the source and refresh the map. Everything outside the markers is hand-written and preserved.
 `;

@@ -1,21 +1,21 @@
 # Cloudflare Pages project (frontend in /dist + API in /functions).
-name = "docchase"
+name = "docnudge"
 compatibility_date = "2025-09-01"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = "./dist"
 
-# Uploaded client documents. Create the bucket first: npx wrangler r2 bucket create docchase-uploads
+# Uploaded client documents. Create the bucket first: npx wrangler r2 bucket create docnudge-uploads
 [[r2_buckets]]
 binding = "BUCKET"
-bucket_name = "docchase-uploads"
+bucket_name = "docnudge-uploads"
 
 [vars]
 # Public URL of your deployed app. Used to build client links. Change when you add a custom domain.
-APP_URL = "https://docchase.pages.dev"
+APP_URL = "https://docnudge.pages.dev"
 # "resend" (default, easiest) or "ses" (about $0.10 per 1,000 emails, needs AWS production access).
 EMAIL_PROVIDER = "resend"
 # Must be on a domain you verified with your email provider.
-EMAIL_FROM = "DocChase <hello@example.com>"
+EMAIL_FROM = "DocNudge <hello@example.com>"
 # Stay under Resend's free 100/day cap. Raise it when you move to a paid plan or SES.
 DAILY_EMAIL_CAP = "90"
 # Max open requests for firms on plan='trial' (0 = unlimited).

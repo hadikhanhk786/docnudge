@@ -1,4 +1,4 @@
-# DocChase (working name)
+# DocNudge (working name)
 
 Document collection for tax preparers, bookkeepers and accountants. The accountant picks a regional checklist
 (US, Australia, UAE), the client opens a no-login link on their phone, uploads documents item by item
@@ -33,15 +33,15 @@ tests/     35 tests (see Tests)
 1. `npm install`
 2. **Neon:** create a project, run `schema.sql` in the SQL editor, copy the connection string.
 3. **Clerk:** create an application, copy the publishable and secret keys.
-4. **R2:** `npx wrangler r2 bucket create docchase-uploads` (Cloudflare asks for a payment method; the free allowance still applies).
+4. **R2:** `npx wrangler r2 bucket create docnudge-uploads` (Cloudflare asks for a payment method; the free allowance still applies).
 5. **Email:** create a Resend account, verify your sending domain, create an API key. Set `EMAIL_FROM` in **both** `wrangler.toml` and `cron/wrangler.toml`.
 6. **Run locally:** copy `.dev.vars.example` to `.dev.vars` and `.env.example` to `.env`, fill them in
    (`LINK_SECRET`: `openssl rand -base64 32`), then `npm run dev` and open **http://localhost:5173**.
    Vite serves the UI and proxies `/api` to the local Workers runtime on port 8788.
 7. **Deploy the app:**
-   - `npx wrangler pages project create docchase`
+   - `npx wrangler pages project create docnudge`
    - for each of `DATABASE_URL`, `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, `LINK_SECRET`, `RESEND_API_KEY`:
-     `npx wrangler pages secret put NAME --project-name docchase`
+     `npx wrangler pages secret put NAME --project-name docnudge`
    - `npm run deploy` (builds locally, so `.env` supplies `VITE_CLERK_PUBLISHABLE_KEY`)
    - set `APP_URL` in `wrangler.toml` to the live URL (or your custom domain) and deploy again.
    - Use Clerk **production** keys for the live site. Preview deployments need their origin in `EXTRA_ORIGINS`.

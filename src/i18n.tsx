@@ -23,7 +23,7 @@ export function I18nProvider({ children, initial, persist = true }: { children: 
   const [lang, setLangState] = useState<Lang>(() => {
     if (initial) return initial;
     try {
-      return localStorage.getItem('docchase.lang') === 'ar' ? 'ar' : 'en';
+      return localStorage.getItem('docnudge.lang') === 'ar' ? 'ar' : 'en';
     } catch {
       return 'en';
     }
@@ -34,7 +34,7 @@ export function I18nProvider({ children, initial, persist = true }: { children: 
       setLangState(l);
       if (persist) {
         try {
-          localStorage.setItem('docchase.lang', l);
+          localStorage.setItem('docnudge.lang', l);
         } catch {
           /* storage can be unavailable (private mode); the choice just won't persist */
         }

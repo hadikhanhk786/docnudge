@@ -91,7 +91,7 @@ const baseEnv = {
   LINK_SECRET: 'integration-test-secret-integration',
   APP_URL: 'https://app.test',
   EMAIL_PROVIDER: 'resend',
-  EMAIL_FROM: 'DocChase <hi@mail.test>',
+  EMAIL_FROM: 'DocNudge <hi@mail.test>',
   RESEND_API_KEY: 're_test',
   DAILY_EMAIL_CAP: '10',
   TRIAL_REQUEST_LIMIT: '25',

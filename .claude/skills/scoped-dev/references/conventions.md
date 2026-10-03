@@ -1,4 +1,4 @@
-# Conventions (DocChase)
+# Conventions (DocNudge)
 
 FACT = true in the code today (cited). RULE = required for new work; the code may not fully follow it yet.
 

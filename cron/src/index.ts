@@ -61,6 +61,6 @@ export default {
     ctx.waitUntil(runReminders(env).then((r) => console.log('reminders', r)));
   },
   async fetch(): Promise<Response> {
-    return new Response('docchase-cron ok');
+    return new Response('docnudge-cron ok');
   },
 } satisfies ExportedHandler<CronEnv>;
