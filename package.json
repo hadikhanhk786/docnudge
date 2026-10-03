@@ -1,0 +1,37 @@
+{
+  "name": "docchase",
+  "version": "0.1.0",
+  "scripts": {
+    "predev": "node -e \"require('fs').mkdirSync('dist',{recursive:true})\"",
+    "dev": "concurrently -k -n web,api -c cyan,magenta \"vite\" \"wrangler pages dev dist --port 8788\"",
+    "build": "vite build",
+    "typecheck": "tsc -p tsconfig.json && tsc -p server/tsconfig.json && tsc -p cron/tsconfig.json",
+    "test": "vitest run",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name docchase",
+    "deploy:cron": "wrangler deploy --config cron/wrangler.toml"
+  },
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@clerk/backend": "^3.22.0",
+    "@clerk/clerk-react": "^5.61.10",
+    "@neondatabase/serverless": "^1.2.0",
+    "aws4fetch": "^1.0.20",
+    "hono": "^4.13.12",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261003.1",
+    "@electric-sql/pglite": "^0.5.8",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "concurrently": "^10.0.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.147.0"
+  }
+}

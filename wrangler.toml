@@ -1,0 +1,26 @@
+# Cloudflare Pages project (frontend in /dist + API in /functions).
+name = "docchase"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = "./dist"
+
+# Uploaded client documents. Create the bucket first: npx wrangler r2 bucket create docchase-uploads
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "docchase-uploads"
+
+[vars]
+# Public URL of your deployed app. Used to build client links. Change when you add a custom domain.
+APP_URL = "https://docchase.pages.dev"
+# "resend" (default, easiest) or "ses" (about $0.10 per 1,000 emails, needs AWS production access).
+EMAIL_PROVIDER = "resend"
+# Must be on a domain you verified with your email provider.
+EMAIL_FROM = "DocChase <hello@example.com>"
+# Stay under Resend's free 100/day cap. Raise it when you move to a paid plan or SES.
+DAILY_EMAIL_CAP = "90"
+# Max open requests for firms on plan='trial' (0 = unlimited).
+TRIAL_REQUEST_LIMIT = "25"
+
+# Secrets (set with `npx wrangler pages secret put NAME`):
+#   DATABASE_URL, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY, LINK_SECRET, RESEND_API_KEY
+#   (SES only) AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION

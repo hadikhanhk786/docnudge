@@ -1,0 +1,7 @@
+# Copy to .dev.vars for local development (wrangler pages dev reads this file).
+DATABASE_URL=postgresql://user:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
+CLERK_SECRET_KEY=sk_test_xxx
+CLERK_PUBLISHABLE_KEY=pk_test_xxx
+LINK_SECRET=replace-with-a-long-random-string
+APP_URL=http://localhost:5173
+RESEND_API_KEY=re_xxx
