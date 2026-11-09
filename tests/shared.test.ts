@@ -2,6 +2,7 @@ import { Webhook } from 'standardwebhooks';
 import { describe, expect, it } from 'vitest';
 import { planForEvent, verifyWebhook } from '../shared/billing';
 import { completeEmail, requestEmail } from '../shared/emailTemplates';
+import { capRemaining, type Sql } from '../shared/mailer';
 import { waLink, waMessage } from '../shared/messages';
 import { ALL_TEMPLATES, REGIONS, getTemplate, suggestDueDate } from '../shared/packs';
 import { MAX_REMINDERS, nextReminderAt } from '../shared/reminders';
@@ -49,6 +50,29 @@ describe('reminder cadence', () => {
   });
   it('stops after the maximum number of reminders', () => {
     expect(nextReminderAt({ now, dueDate: null, sent: MAX_REMINDERS })).toBeNull();
+  });
+  it('still sends the last allowed reminder', () => {
+    expect(nextReminderAt({ now, dueDate: null, sent: MAX_REMINDERS - 1 })).toEqual(inDays(3));
+  });
+  it('switches cadence exactly at the 7 and 2 day boundaries', () => {
+    expect(nextReminderAt({ now, dueDate: inDays(7), sent: 1 })).toEqual(inDays(2));
+    expect(nextReminderAt({ now, dueDate: inDays(8), sent: 1 })).toEqual(inDays(3));
+    expect(nextReminderAt({ now, dueDate: inDays(2), sent: 1 })).toEqual(inDays(1));
+    expect(nextReminderAt({ now, dueDate: inDays(3), sent: 1 })).toEqual(inDays(2));
+  });
+});
+
+describe('daily email cap', () => {
+  const sqlWith = (n: number) => (async () => [{ n }]) as unknown as Sql;
+
+  it('subtracts emails already sent from the cap', async () => {
+    expect(await capRemaining(sqlWith(4), '10')).toBe(6);
+  });
+  it('never goes below zero', async () => {
+    expect(await capRemaining(sqlWith(25), '10')).toBe(0);
+  });
+  it('defaults to 90 when no cap is configured', async () => {
+    expect(await capRemaining(sqlWith(0))).toBe(90);
   });
 });
 
