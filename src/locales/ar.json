@@ -10,6 +10,7 @@
   "dash_empty_body": "أنشئ طلبًا ثم أرسل الرابط عبر البريد الإلكتروني أو واتساب.",
   "emails_left": "المتبقي اليوم: {n} رسالة بريد",
   "btn_new_request": "طلب جديد",
+  "btn_export_csv": "تصدير CSV",
   "btn_copy_link": "نسخ الرابط",
   "btn_copied": "تم النسخ",
   "btn_whatsapp": "واتساب",

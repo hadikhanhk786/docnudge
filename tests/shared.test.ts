@@ -2,6 +2,8 @@ import { Webhook } from 'standardwebhooks';
 import { describe, expect, it } from 'vitest';
 import { planForEvent, verifyWebhook } from '../shared/billing';
 import { completeEmail, requestEmail } from '../shared/emailTemplates';
+import { requestsToCsv } from '../src/lib/csv';
+import type { RequestRow } from '../src/lib/types';
 import { capRemaining, type Sql } from '../shared/mailer';
 import { waLink, waMessage } from '../shared/messages';
 import { ALL_TEMPLATES, REGIONS, getTemplate, suggestDueDate } from '../shared/packs';
@@ -209,5 +211,20 @@ describe('Dodo webhooks', () => {
     expect(planForEvent('subscription.updated', 'expired')).toBe('canceled');
     expect(planForEvent('subscription.updated', 'paused')).toBeNull();
     expect(planForEvent('payment.failed', undefined)).toBeNull();
+  });
+});
+
+describe('requests CSV export', () => {
+  const row = (over: Partial<RequestRow>) =>
+    ({ client_name: 'Ann', client_email: 'a@x.com', title: '2026 return', status: 'open', due_date: '2026-04-15', required_done: 2, required_total: 5, reminders_sent: 1, created_at: '2026-03-01T10:00:00Z', ...over }) as RequestRow;
+
+  it('writes a header and one line per request', () => {
+    expect(requestsToCsv([row({})])).toBe(
+      'client,email,title,status,due_date,required_done,required_total,reminders_sent,created\r\n' + 'Ann,a@x.com,2026 return,open,2026-04-15,2,5,1,2026-03-01\r\n',
+    );
+  });
+  it('quotes commas and quotes, leaves empty fields blank, defuses formulas', () => {
+    const csv = requestsToCsv([row({ client_name: 'Smith, "Bob"', client_email: null, due_date: null, title: '=SUM(A1)' })]);
+    expect(csv.split('\r\n')[1]).toBe(`"Smith, ""Bob""",,'=SUM(A1),open,,2,5,1,2026-03-01`);
   });
 });

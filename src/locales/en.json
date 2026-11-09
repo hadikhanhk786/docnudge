@@ -10,6 +10,7 @@
   "dash_empty_body": "Create a request, then send the link by email or WhatsApp.",
   "emails_left": "{n} emails left today",
   "btn_new_request": "New request",
+  "btn_export_csv": "Export CSV",
   "btn_copy_link": "Copy link",
   "btn_copied": "Copied",
   "btn_whatsapp": "WhatsApp",

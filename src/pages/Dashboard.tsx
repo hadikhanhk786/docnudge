@@ -5,6 +5,7 @@ import { ClientActions } from '../components/ClientActions';
 import { ProgressRail, segmentsFromCounts } from '../components/ProgressRail';
 import { useI18n } from '../i18n';
 import { useApi } from '../lib/api';
+import { downloadCsv, requestsToCsv } from '../lib/csv';
 import { todayIso } from '../lib/format';
 import type { Firm, RequestRow } from '../lib/types';
 
@@ -42,9 +43,16 @@ export default function Dashboard() {
     <>
       <div className="page-head">
         <h1>{t('dash_title')}</h1>
-        <Link className="btn primary" to="/new">
-          {t('btn_new_request')}
-        </Link>
+        <div className="head-actions">
+          {rows.length > 0 && (
+            <button type="button" className="btn ghost" onClick={() => downloadCsv(`requests-${todayIso()}.csv`, requestsToCsv(rows))}>
+              {t('btn_export_csv')}
+            </button>
+          )}
+          <Link className="btn primary" to="/new">
+            {t('btn_new_request')}
+          </Link>
+        </div>
       </div>
       {emailsLeft !== null && <p className="hint">{t('emails_left', { n: emailsLeft })}</p>}
 
