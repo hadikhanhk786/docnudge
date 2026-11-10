@@ -33,6 +33,14 @@ describe('client link tokens', () => {
   it('gives every link version a different signature (so rotating revokes old links)', async () => {
     expect(await makeToken(SECRET, ID, 1)).not.toBe(await makeToken(SECRET, ID, 2));
   });
+
+  it('is deterministic and rejects malformed shapes', async () => {
+    const token = await makeToken(SECRET, ID, 3);
+    expect(await makeToken(SECRET, ID, 3)).toBe(token);
+    expect(await verifyToken(SECRET, `${token}.extra`)).toBeNull();
+    expect(await verifyToken(SECRET, `${ID}.1234567.${token.split('.')[2]}`)).toBeNull();
+    expect(await verifyToken(SECRET, `${ID}.-1.${token.split('.')[2]}`)).toBeNull();
+  });
 });
 
 describe('reminder cadence', () => {
@@ -92,6 +100,17 @@ describe('send windows', () => {
     expect(inSendWindow('au', at(7))).toBe(true);
     expect(inSendWindow('au', at(8))).toBe(false);
     expect(inSendWindow('au', at(12))).toBe(false);
+  });
+  it('window edges are decided by the UTC hour, not the minute', () => {
+    const atMin = (h: number, m: number) => new Date(Date.UTC(2026, 9, 3, h, m));
+    expect(inSendWindow('ae', atMin(4, 59))).toBe(false);
+    expect(inSendWindow('ae', atMin(5, 0))).toBe(true);
+    expect(inSendWindow('ae', atMin(13, 59))).toBe(true);
+    expect(inSendWindow('ae', atMin(14, 0))).toBe(false);
+    expect(inSendWindow('au', atMin(22, 59))).toBe(false);
+    expect(inSendWindow('au', atMin(23, 0))).toBe(true);
+    expect(inSendWindow('au', atMin(7, 59))).toBe(true);
+    expect(inSendWindow('au', atMin(8, 0))).toBe(false);
   });
   it('US: 15:00-23:00 UTC', () => {
     expect(inSendWindow('us', at(15))).toBe(true);
