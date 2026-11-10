@@ -7,5 +7,6 @@
 - [x] CSV export of request status on the dashboard
 - [ ] Dashboard filter: open / complete / overdue requests
 - [ ] Show reminders_sent and next reminder time on the request detail page
-- [ ] Tests for suggestDueDate month-end and leap-year edge cases
-- [ ] Overdue badge on requests with missing items past due date
+- [x] Tests for suggestDueDate same-day and year-end edge cases
+- [ ] Tests for requestsToCsv escaping of quotes and newlines
+- [ ] Test that every pack template has a non-empty Arabic title

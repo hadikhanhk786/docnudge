@@ -156,6 +156,13 @@ describe('suggestDueDate', () => {
     expect(suggestDueDate(vat, d('2026-10-29'))).toBe('2027-01-28');
     expect(suggestDueDate(bas, d('2026-11-02'))).toBe('2027-02-28');
   });
+  it('a deadline falling on the current day is still suggested', () => {
+    expect(suggestDueDate(vat, d('2026-10-28'))).toBe('2026-10-28');
+  });
+  it('rolls over on the last day of the year', () => {
+    expect(suggestDueDate(us, d('2026-12-31'))).toBe('2027-04-15');
+    expect(suggestDueDate(vat, d('2026-12-31'))).toBe('2027-01-28');
+  });
   it('manual rules give no suggestion', () => {
     expect(suggestDueDate(getTemplate('ae.corporate_tax')!.deadline, d('2026-10-03'))).toBeNull();
   });
