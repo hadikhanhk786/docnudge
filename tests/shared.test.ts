@@ -207,6 +207,12 @@ describe('emails and WhatsApp', () => {
     expect(waLink('971501234567', text).startsWith('https://wa.me/971501234567?text=')).toBe(true);
     expect(waLink(null, text).startsWith('https://wa.me/?text=')).toBe(true);
   });
+  it('round-trips Arabic text, quotes and ampersands through the WhatsApp link', () => {
+    const text = waMessage('ar', { clientName: 'سامي & أحمد', firmName: 'مكتب "النور"', title: 'إقرار 2026', link: base.link, dueDate: '2026-04-15' });
+    const url = waLink('971501234567', text);
+    expect(url).not.toMatch(/[\s"&]/);
+    expect(new URL(url).searchParams.get('text')).toBe(text);
+  });
 });
 
 describe('Dodo webhooks', () => {
