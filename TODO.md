@@ -8,5 +8,8 @@
 - [ ] Dashboard filter: open / complete / overdue requests
 - [ ] Show reminders_sent and next reminder time on the request detail page
 - [x] Tests for suggestDueDate same-day and year-end edge cases
-- [ ] Tests for requestsToCsv escaping of quotes and newlines
-- [ ] Test that every pack template has a non-empty Arabic title
+- [x] Tests for requestsToCsv escaping of quotes and newlines
+- [x] Test that every pack template has a non-empty Arabic title (covered by 'region packs')
+- [ ] Tests for waLink/waMessage with Arabic text and special characters
+- [ ] Test planForEvent covers every webhook event type
+- [ ] Test capRemaining with zero and over-cap sent counts

@@ -253,4 +253,8 @@ describe('requests CSV export', () => {
     const csv = requestsToCsv([row({ client_name: 'Smith, "Bob"', client_email: null, due_date: null, title: '=SUM(A1)' })]);
     expect(csv.split('\r\n')[1]).toBe(`"Smith, ""Bob""",,'=SUM(A1),open,,2,5,1,2026-03-01`);
   });
+  it('quotes embedded newlines, defuses leading -/@, and treats missing counts as 0', () => {
+    const csv = requestsToCsv([row({ client_name: 'Line1\nLine2', title: '-5 refund', client_email: '@evil', required_done: null, required_total: null } as Partial<RequestRow>)]);
+    expect(csv.slice(csv.indexOf('\r\n') + 2)).toBe(`"Line1\nLine2",'@evil,'-5 refund,open,2026-04-15,0,0,1,2026-03-01\r\n`);
+  });
 });
