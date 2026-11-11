@@ -5,7 +5,7 @@ import { completeEmail, requestEmail } from '../shared/emailTemplates';
 import { requestsToCsv } from '../src/lib/csv';
 import type { RequestRow } from '../src/lib/types';
 import { capRemaining, type Sql } from '../shared/mailer';
-import { waLink, waMessage } from '../shared/messages';
+import { formatDate, waLink, waMessage } from '../shared/messages';
 import { ALL_TEMPLATES, REGIONS, getTemplate, suggestDueDate } from '../shared/packs';
 import { MAX_REMINDERS, nextReminderAt } from '../shared/reminders';
 import { inSendWindow } from '../shared/schedule';
@@ -212,6 +212,18 @@ describe('emails and WhatsApp', () => {
     const url = waLink('971501234567', text);
     expect(url).not.toMatch(/[\s"&]/);
     expect(new URL(url).searchParams.get('text')).toBe(text);
+  });
+});
+
+describe('formatDate', () => {
+  it('formats en dates in UTC without day shifting', () => {
+    expect(formatDate('2026-04-15', 'en')).toBe('15 Apr 2026');
+    expect(formatDate('2026-12-31', 'en')).toBe('31 Dec 2026');
+  });
+  it('formats ar dates in the ar-AE style, differing from en', () => {
+    const out = formatDate('2026-04-15', 'ar');
+    expect(out.replace(/[\u200e\u200f]/g, '')).toBe('15/04/2026');
+    expect(out).not.toBe(formatDate('2026-04-15', 'en'));
   });
 });
 

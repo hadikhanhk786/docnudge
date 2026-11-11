@@ -13,4 +13,7 @@
 - [x] Tests for waLink/waMessage with Arabic text and special characters
 - [ ] Test planForEvent covers every webhook event type
 - [x] Test capRemaining with zero and over-cap sent counts (already covered)
-- [ ] Test formatDate output for en and ar locales
+- [x] Test formatDate output for en and ar locales
+- [ ] Test waMessage omits the due-date sentence when dueDate is null
+- [ ] Test nextReminderAt returns null after MAX_REMINDERS
+- [ ] Firm setting to pause reminders for one request (needs schema review)
