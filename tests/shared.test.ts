@@ -256,6 +256,20 @@ describe('Dodo webhooks', () => {
     expect(planForEvent('subscription.updated', 'paused')).toBeNull();
     expect(planForEvent('payment.failed', undefined)).toBeNull();
   });
+
+  it('covers every subscription event type', () => {
+    const cases: [string, unknown, string | null][] = [
+      ['subscription.active', undefined, 'active'],
+      ['subscription.plan_changed', undefined, 'active'],
+      ['subscription.cancelled', undefined, 'canceled'],
+      ['subscription.expired', undefined, 'canceled'],
+      ['subscription.updated', 'active', 'active'],
+      ['subscription.updated', 'cancelled', 'canceled'],
+      ['subscription.updated', undefined, null],
+      ['subscription.unknown', 'active', null],
+    ];
+    for (const [type, status, plan] of cases) expect(planForEvent(type, status), `${type}/${String(status)}`).toBe(plan);
+  });
 });
 
 describe('requests CSV export', () => {
