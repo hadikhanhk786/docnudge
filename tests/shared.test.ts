@@ -235,6 +235,11 @@ describe('formatDate', () => {
     expect(formatDate('2026-04-15', 'en')).toBe('15 Apr 2026');
     expect(formatDate('2026-12-31', 'en')).toBe('31 Dec 2026');
   });
+  it('keeps year-boundary and leap-day dates on the same calendar day', () => {
+    expect(formatDate('2026-01-01', 'en')).toBe('1 Jan 2026');
+    expect(formatDate('2028-02-29', 'en')).toBe('29 Feb 2028');
+    expect(formatDate('2028-03-01', 'en')).toBe('1 Mar 2028');
+  });
   it('formats ar dates in the ar-AE style, differing from en', () => {
     const out = formatDate('2026-04-15', 'ar');
     expect(out.replace(/[\u200e\u200f]/g, '')).toBe('15/04/2026');

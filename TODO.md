@@ -19,4 +19,6 @@
 - [ ] Firm setting to pause reminders for one request (needs schema review)
 - [x] Test inSendWindow across a DST change (n/a: windows are fixed UTC hours)
 - [x] Test verifyToken rejects tampered request ids
-- [ ] Test formatDate handles year-boundary and leap-day ISO dates
+- [x] Test formatDate handles year-boundary and leap-day ISO dates
+- [ ] Test requestsToCsv with an empty request list
+- [ ] Test getTemplate falls back sensibly for an unknown region
