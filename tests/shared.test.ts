@@ -34,6 +34,13 @@ describe('client link tokens', () => {
     expect(await makeToken(SECRET, ID, 1)).not.toBe(await makeToken(SECRET, ID, 2));
   });
 
+  it('rejects a valid signature reused with a different request id', async () => {
+    const [, version, sig] = (await makeToken(SECRET, ID, 1)).split('.');
+    const otherId = ID.replace('3f2b8c1e', '3f2b8c1f');
+    expect(await verifyToken(SECRET, `${otherId}.${version}.${sig}`)).toBeNull();
+    expect(await verifyToken(SECRET, `${ID.toUpperCase()}.${version}.${sig}`)).toBeNull();
+  });
+
   it('is deterministic and rejects malformed shapes', async () => {
     const token = await makeToken(SECRET, ID, 3);
     expect(await makeToken(SECRET, ID, 3)).toBe(token);
@@ -206,6 +213,14 @@ describe('emails and WhatsApp', () => {
     expect(text).toContain(base.link);
     expect(waLink('971501234567', text).startsWith('https://wa.me/971501234567?text=')).toBe(true);
     expect(waLink(null, text).startsWith('https://wa.me/?text=')).toBe(true);
+  });
+  it('omits the due-date sentence when there is no due date', () => {
+    const input = { clientName: 'Sam', firmName: 'Acme CPA', title: '2026 return', link: base.link };
+    const without = waMessage('en', { ...input, dueDate: null });
+    const withDue = waMessage('en', { ...input, dueDate: '2026-04-15' });
+    expect(without).not.toContain('Please send them by');
+    expect(withDue).toContain('Please send them by');
+    expect(withDue.startsWith(without)).toBe(true);
   });
   it('round-trips Arabic text, quotes and ampersands through the WhatsApp link', () => {
     const text = waMessage('ar', { clientName: 'سامي & أحمد', firmName: 'مكتب "النور"', title: 'إقرار 2026', link: base.link, dueDate: '2026-04-15' });

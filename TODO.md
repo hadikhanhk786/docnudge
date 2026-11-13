@@ -14,8 +14,9 @@
 - [x] Test planForEvent covers every webhook event type
 - [x] Test capRemaining with zero and over-cap sent counts (already covered)
 - [x] Test formatDate output for en and ar locales
-- [ ] Test waMessage omits the due-date sentence when dueDate is null
-- [ ] Test nextReminderAt returns null after MAX_REMINDERS
+- [x] Test waMessage omits the due-date sentence when dueDate is null
+- [x] Test nextReminderAt returns null after MAX_REMINDERS (already covered)
 - [ ] Firm setting to pause reminders for one request (needs schema review)
-- [ ] Test inSendWindow across a DST change for a named timezone
-- [ ] Test verifyToken rejects tampered request ids
+- [x] Test inSendWindow across a DST change (n/a: windows are fixed UTC hours)
+- [x] Test verifyToken rejects tampered request ids
+- [ ] Test formatDate handles year-boundary and leap-day ISO dates
