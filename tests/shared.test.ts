@@ -6,7 +6,7 @@ import { requestsToCsv } from '../src/lib/csv';
 import type { RequestRow } from '../src/lib/types';
 import { capRemaining, type Sql } from '../shared/mailer';
 import { formatDate, waLink, waMessage } from '../shared/messages';
-import { ALL_TEMPLATES, REGIONS, getTemplate, suggestDueDate } from '../shared/packs';
+import { ALL_TEMPLATES, REGIONS, getTemplate, suggestDueDate, templatesForRegion } from '../shared/packs';
 import { MAX_REMINDERS, nextReminderAt } from '../shared/reminders';
 import { inSendWindow } from '../shared/schedule';
 import { makeToken, verifyToken } from '../shared/tokens';
@@ -318,5 +318,16 @@ describe('getTemplate lookup', () => {
   it('returns undefined for an unknown or empty id', () => {
     expect(getTemplate('zz.unknown')).toBeUndefined();
     expect(getTemplate('')).toBeUndefined();
+  });
+});
+
+describe('templatesForRegion', () => {
+  it('returns exactly the templates of that region', () => {
+    for (const r of Object.keys(REGIONS) as (keyof typeof REGIONS)[]) {
+      const list = templatesForRegion(r);
+      expect(list.length).toBeGreaterThan(0);
+      expect(list.every((t) => t.region === r)).toBe(true);
+      expect(list).toEqual(ALL_TEMPLATES.filter((t) => t.region === r));
+    }
   });
 });

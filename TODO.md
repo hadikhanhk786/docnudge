@@ -22,4 +22,6 @@
 - [x] Test formatDate handles year-boundary and leap-day ISO dates
 - [x] Test requestsToCsv with an empty request list
 - [x] Test getTemplate returns undefined for an unknown id
-- [ ] Test templatesForRegion returns only templates of that region
+- [x] Test templatesForRegion returns only templates of that region
+- [ ] Test every pack template id is unique
+- [ ] Test requestsToCsv strips time from created_at
