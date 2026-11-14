@@ -20,5 +20,6 @@
 - [x] Test inSendWindow across a DST change (n/a: windows are fixed UTC hours)
 - [x] Test verifyToken rejects tampered request ids
 - [x] Test formatDate handles year-boundary and leap-day ISO dates
-- [ ] Test requestsToCsv with an empty request list
-- [ ] Test getTemplate falls back sensibly for an unknown region
+- [x] Test requestsToCsv with an empty request list
+- [x] Test getTemplate returns undefined for an unknown id
+- [ ] Test templatesForRegion returns only templates of that region
