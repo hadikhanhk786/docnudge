@@ -308,6 +308,14 @@ describe('requests CSV export', () => {
   it('writes only the header for an empty list', () => {
     expect(requestsToCsv([])).toBe('client,email,title,status,due_date,required_done,required_total,reminders_sent,created\r\n');
   });
+  it('keeps only the date of created_at and preserves row order', () => {
+    const csv = requestsToCsv([row({ title: 'A', created_at: '2026-03-01T23:59:59.999Z' }), row({ title: 'B', created_at: '2026-12-31T00:00:00+05:00' })]);
+    const lines = csv.split('\r\n');
+    expect(lines[1].endsWith(',2026-03-01')).toBe(true);
+    expect(lines[2].endsWith(',2026-12-31')).toBe(true);
+    expect(lines[1]).toContain(',A,');
+    expect(lines[2]).toContain(',B,');
+  });
   it('quotes embedded newlines, defuses leading -/@, and treats missing counts as 0', () => {
     const csv = requestsToCsv([row({ client_name: 'Line1\nLine2', title: '-5 refund', client_email: '@evil', required_done: null, required_total: null } as Partial<RequestRow>)]);
     expect(csv.slice(csv.indexOf('\r\n') + 2)).toBe(`"Line1\nLine2",'@evil,'-5 refund,open,2026-04-15,0,0,1,2026-03-01\r\n`);

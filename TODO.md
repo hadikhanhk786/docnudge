@@ -23,5 +23,7 @@
 - [x] Test requestsToCsv with an empty request list
 - [x] Test getTemplate returns undefined for an unknown id
 - [x] Test templatesForRegion returns only templates of that region
-- [ ] Test every pack template id is unique
-- [ ] Test requestsToCsv strips time from created_at
+- [x] Test every pack template id is unique (covered by 'region packs')
+- [x] Test requestsToCsv strips time from created_at
+- [ ] Test that every pack template item key is lowercase snake_case
+- [ ] Test requestsToCsv defuses a leading tab in a field
