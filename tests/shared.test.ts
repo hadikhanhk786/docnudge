@@ -137,6 +137,7 @@ describe('region packs', () => {
       expect(t.items.some((i) => i.required)).toBe(true);
       expect(new Set(t.items.map((i) => i.key)).size).toBe(t.items.length);
       for (const i of t.items) {
+        expect(i.key).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
         expect(i.en.length).toBeGreaterThan(0);
         expect(/[\u0600-\u06FF]/.test(i.ar)).toBe(true);
       }

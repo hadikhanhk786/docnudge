@@ -25,5 +25,7 @@
 - [x] Test templatesForRegion returns only templates of that region
 - [x] Test every pack template id is unique (covered by 'region packs')
 - [x] Test requestsToCsv strips time from created_at
-- [ ] Test that every pack template item key is lowercase snake_case
+- [x] Test that every pack template item key is lowercase kebab-case
 - [ ] Test requestsToCsv defuses a leading tab in a field
+- [ ] Test every pack template has a non-empty deadline definition
+- [ ] Test that item keys are unique across a region's templates where labels match
