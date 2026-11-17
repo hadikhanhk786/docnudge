@@ -30,5 +30,6 @@
 - [x] Test every pack template has a non-empty deadline definition
 - [ ] Test that item keys are unique across a region's templates where labels match
 - [x] Test annual pack deadlines use valid month and day values
-- [ ] Test suggestDueDate for quarterly rules across a year boundary
+- [x] Test suggestDueDate for quarterly rules across a year boundary
 - [ ] Test requestsToCsv column order matches the dashboard export header
+- [ ] Test suggestDueDate returns null for manual rules

@@ -159,6 +159,10 @@ describe('suggestDueDate', () => {
     expect(suggestDueDate(us, d('2026-04-15'))).toBe('2026-04-15');
     expect(suggestDueDate(us, d('2026-10-03'))).toBe('2027-04-15');
   });
+  it('quarterly rules keep a deadline that falls today and roll from the last day of the year', () => {
+    expect(suggestDueDate(vat, d('2026-10-28'))).toBe('2026-10-28');
+    expect(suggestDueDate(vat, d('2026-12-31'))).toBe('2027-01-28');
+  });
   it('quarterly rules pick the next date, including across a year end', () => {
     expect(suggestDueDate(vat, d('2026-10-03'))).toBe('2026-10-28');
     expect(suggestDueDate(vat, d('2026-10-29'))).toBe('2027-01-28');
