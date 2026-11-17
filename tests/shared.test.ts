@@ -323,6 +323,15 @@ describe('requests CSV export', () => {
   });
 });
 
+describe('requests CSV leading whitespace', () => {
+  it('defuses a leading tab or carriage return in a field', () => {
+    const r = { client_name: '\tTab', client_email: 'a@x.com', title: '\rCR', status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: 0, created_at: '2026-03-01T10:00:00Z' } as RequestRow;
+    const line = requestsToCsv([r]).split('\r\n')[1];
+    expect(line.startsWith(`'\tTab,`)).toBe(true);
+    expect(line).toContain(`,"'\rCR",`);
+  });
+});
+
 describe('getTemplate lookup', () => {
   it('returns undefined for an unknown or empty id', () => {
     expect(getTemplate('zz.unknown')).toBeUndefined();
