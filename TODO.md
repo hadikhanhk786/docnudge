@@ -27,6 +27,8 @@
 - [x] Test requestsToCsv strips time from created_at
 - [x] Test that every pack template item key is lowercase kebab-case
 - [x] Test requestsToCsv defuses a leading tab in a field
-- [ ] Test every pack template has a non-empty deadline definition
+- [x] Test every pack template has a non-empty deadline definition
 - [ ] Test that item keys are unique across a region's templates where labels match
-- [ ] Test annual pack deadlines use valid month and day values
+- [x] Test annual pack deadlines use valid month and day values
+- [ ] Test suggestDueDate for quarterly rules across a year boundary
+- [ ] Test requestsToCsv column order matches the dashboard export header

@@ -332,6 +332,24 @@ describe('requests CSV leading whitespace', () => {
   });
 });
 
+describe('pack deadline rules', () => {
+  it('every template has a non-empty deadline note', () => {
+    for (const t of ALL_TEMPLATES) expect(t.deadline.note.trim().length, t.id).toBeGreaterThan(0);
+  });
+  it('annual and quarterly rules use valid months and days', () => {
+    for (const t of ALL_TEMPLATES) {
+      const d = t.deadline;
+      if (d.type === 'manual') continue;
+      expect(d.day, t.id).toBeGreaterThanOrEqual(1);
+      expect(d.day, t.id).toBeLessThanOrEqual(31);
+      for (const m of d.type === 'annual' ? [d.month] : d.months) {
+        expect(m, t.id).toBeGreaterThanOrEqual(1);
+        expect(m, t.id).toBeLessThanOrEqual(12);
+      }
+    }
+  });
+});
+
 describe('getTemplate lookup', () => {
   it('returns undefined for an unknown or empty id', () => {
     expect(getTemplate('zz.unknown')).toBeUndefined();
