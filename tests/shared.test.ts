@@ -321,6 +321,12 @@ describe('requests CSV export', () => {
     expect(lines[1]).toContain(',A,');
     expect(lines[2]).toContain(',B,');
   });
+  it('header column order and count match every data row', () => {
+    const lines = requestsToCsv([row({})]).trimEnd().split('\r\n');
+    const head = lines[0].split(',');
+    expect(head).toEqual(['client', 'email', 'title', 'status', 'due_date', 'required_done', 'required_total', 'reminders_sent', 'created']);
+    expect(lines[1].split(',')).toHaveLength(head.length);
+  });
   it('quotes embedded newlines, defuses leading -/@, and treats missing counts as 0', () => {
     const csv = requestsToCsv([row({ client_name: 'Line1\nLine2', title: '-5 refund', client_email: '@evil', required_done: null, required_total: null } as Partial<RequestRow>)]);
     expect(csv.slice(csv.indexOf('\r\n') + 2)).toBe(`"Line1\nLine2",'@evil,'-5 refund,open,2026-04-15,0,0,1,2026-03-01\r\n`);

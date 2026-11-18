@@ -31,5 +31,7 @@
 - [ ] Test that item keys are unique across a region's templates where labels match
 - [x] Test annual pack deadlines use valid month and day values
 - [x] Test suggestDueDate for quarterly rules across a year boundary
-- [ ] Test requestsToCsv column order matches the dashboard export header
+- [x] Test requestsToCsv column order matches the dashboard export header
 - [ ] Test suggestDueDate returns null for manual rules
+- [ ] Test requestsToCsv keeps non-ASCII (Arabic) client names intact
+- [ ] Test requestsToCsv defuses a leading carriage return in a field
