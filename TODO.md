@@ -32,6 +32,7 @@
 - [x] Test annual pack deadlines use valid month and day values
 - [x] Test suggestDueDate for quarterly rules across a year boundary
 - [x] Test requestsToCsv column order matches the dashboard export header
-- [ ] Test suggestDueDate returns null for manual rules
+- [x] Test suggestDueDate returns null for manual rules
 - [ ] Test requestsToCsv keeps non-ASCII (Arabic) client names intact
 - [ ] Test requestsToCsv defuses a leading carriage return in a field
+- [ ] Test suggestDueDate leaves the passed-in Date unmutated

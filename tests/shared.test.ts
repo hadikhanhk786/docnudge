@@ -171,6 +171,11 @@ describe('suggestDueDate', () => {
   it('a deadline falling on the current day is still suggested', () => {
     expect(suggestDueDate(vat, d('2026-10-28'))).toBe('2026-10-28');
   });
+  it('manual rules never suggest a date', () => {
+    const manual = ALL_TEMPLATES.filter((t) => t.deadline.type === 'manual');
+    expect(manual.length).toBeGreaterThan(0);
+    for (const t of manual) expect(suggestDueDate(t.deadline, d('2026-06-15'))).toBeNull();
+  });
   it('rolls over on the last day of the year', () => {
     expect(suggestDueDate(us, d('2026-12-31'))).toBe('2027-04-15');
     expect(suggestDueDate(vat, d('2026-12-31'))).toBe('2027-01-28');
