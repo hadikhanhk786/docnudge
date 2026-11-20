@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [emailsLeft, setEmailsLeft] = useState<number | null>(null);
   const [rows, setRows] = useState<RequestRow[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'open' | 'complete' | 'overdue'>('all');
 
   const load = useCallback(async () => {
     try {
@@ -38,6 +39,10 @@ export default function Dashboard() {
 
   if (failed) return <p className="hint bad" role="alert">{t('error_generic')}</p>;
   if (!rows || !firm) return <p className="hint">…</p>;
+
+  const today = todayIso();
+  const isOverdue = (r: RequestRow) => r.status === 'open' && r.due_date !== null && r.due_date < today;
+  const shown = rows.filter((r) => filter === 'all' || (filter === 'overdue' ? isOverdue(r) : r.status === filter));
 
   return (
     <>
@@ -62,11 +67,18 @@ export default function Dashboard() {
           <p>{t('dash_empty_body')}</p>
         </section>
       ) : (
+        <>
+        <select aria-label={t('filter_label')} value={filter} onChange={(e) => setFilter(e.target.value as typeof filter)}>
+          <option value="all">{t('filter_all')}</option>
+          <option value="open">{t('filter_open')}</option>
+          <option value="complete">{t('status_complete')}</option>
+          <option value="overdue">{t('filter_overdue')}</option>
+        </select>
         <ul className="list">
-          {rows.map((r) => {
+          {shown.map((r) => {
             const total = r.required_total ?? 0;
             const done = r.required_done ?? 0;
-            const overdue = r.status === 'open' && r.due_date !== null && r.due_date < todayIso();
+            const overdue = isOverdue(r);
             return (
               <li className="row" key={r.id}>
                 <div className="row-main">
@@ -95,6 +107,7 @@ export default function Dashboard() {
             );
           })}
         </ul>
+        </>
       )}
     </>
   );
