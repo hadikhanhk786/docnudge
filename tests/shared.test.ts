@@ -154,6 +154,13 @@ describe('suggestDueDate', () => {
   const vat = getTemplate('ae.vat')!.deadline;
   const d = (s: string) => new Date(`${s}T00:00:00Z`);
 
+  it('does not mutate the passed-in Date', () => {
+    const from = d('2026-10-03');
+    suggestDueDate(us, from);
+    suggestDueDate(bas, from);
+    expect(from.toISOString()).toBe('2026-10-03T00:00:00.000Z');
+  });
+
   it('annual rules roll over after the date has passed', () => {
     expect(suggestDueDate(us, d('2026-02-01'))).toBe('2026-04-15');
     expect(suggestDueDate(us, d('2026-04-15'))).toBe('2026-04-15');

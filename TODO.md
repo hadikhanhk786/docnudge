@@ -35,4 +35,5 @@
 - [x] Test suggestDueDate returns null for manual rules
 - [x] Test requestsToCsv keeps non-ASCII (Arabic) client names intact
 - [x] Test requestsToCsv defuses a leading carriage return in a field (covered by 'leading whitespace')
-- [ ] Test suggestDueDate leaves the passed-in Date unmutated
+- [x] Test suggestDueDate leaves the passed-in Date unmutated
+- [ ] Test requestsToCsv quotes a field that has only a carriage return
