@@ -332,6 +332,10 @@ describe('requests CSV export', () => {
     expect(head).toEqual(['client', 'email', 'title', 'status', 'due_date', 'required_done', 'required_total', 'reminders_sent', 'created']);
     expect(lines[1].split(',')).toHaveLength(head.length);
   });
+  it('keeps non-ASCII (Arabic) client names and titles intact', () => {
+    const csv = requestsToCsv([row({ client_name: 'أحمد، علي', title: 'إقرار ضريبي' })]);
+    expect(csv.split('\r\n')[1]).toBe('أحمد، علي,a@x.com,إقرار ضريبي,open,2026-04-15,2,5,1,2026-03-01');
+  });
   it('quotes embedded newlines, defuses leading -/@, and treats missing counts as 0', () => {
     const csv = requestsToCsv([row({ client_name: 'Line1\nLine2', title: '-5 refund', client_email: '@evil', required_done: null, required_total: null } as Partial<RequestRow>)]);
     expect(csv.slice(csv.indexOf('\r\n') + 2)).toBe(`"Line1\nLine2",'@evil,'-5 refund,open,2026-04-15,0,0,1,2026-03-01\r\n`);

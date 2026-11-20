@@ -33,6 +33,6 @@
 - [x] Test suggestDueDate for quarterly rules across a year boundary
 - [x] Test requestsToCsv column order matches the dashboard export header
 - [x] Test suggestDueDate returns null for manual rules
-- [ ] Test requestsToCsv keeps non-ASCII (Arabic) client names intact
-- [ ] Test requestsToCsv defuses a leading carriage return in a field
+- [x] Test requestsToCsv keeps non-ASCII (Arabic) client names intact
+- [x] Test requestsToCsv defuses a leading carriage return in a field (covered by 'leading whitespace')
 - [ ] Test suggestDueDate leaves the passed-in Date unmutated
