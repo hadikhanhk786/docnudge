@@ -356,6 +356,10 @@ describe('requests CSV leading whitespace', () => {
     expect(line.startsWith(`'\tTab,`)).toBe(true);
     expect(line).toContain(`,"'\rCR",`);
   });
+  it('quotes and defuses a field that is only a carriage return', () => {
+    const r = { client_name: '\r', client_email: 'a@x.com', title: 'T', status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: 0, created_at: '2026-03-01T10:00:00Z' } as RequestRow;
+    expect(requestsToCsv([r]).split('\r\n')[1]).toBe(`"'\r",a@x.com,T,open,,0,0,0,2026-03-01`);
+  });
 });
 
 describe('pack deadline rules', () => {

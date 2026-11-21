@@ -36,6 +36,8 @@
 - [x] Test requestsToCsv keeps non-ASCII (Arabic) client names intact
 - [x] Test requestsToCsv defuses a leading carriage return in a field (covered by 'leading whitespace')
 - [x] Test suggestDueDate leaves the passed-in Date unmutated
-- [ ] Test requestsToCsv quotes a field that has only a carriage return
+- [x] Test requestsToCsv quotes a field that has only a carriage return
 - [ ] Show an empty-state message when the dashboard filter matches no requests
 - [ ] Include the active dashboard filter in the CSV export
+- [ ] Test requestsToCsv with a null reminders_sent column value
+- [ ] Test requestsToCsv defuses a leading plus sign
