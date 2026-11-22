@@ -37,7 +37,9 @@
 - [x] Test requestsToCsv defuses a leading carriage return in a field (covered by 'leading whitespace')
 - [x] Test suggestDueDate leaves the passed-in Date unmutated
 - [x] Test requestsToCsv quotes a field that has only a carriage return
-- [ ] Show an empty-state message when the dashboard filter matches no requests
+- [x] Show an empty-state message when the dashboard filter matches no requests
 - [ ] Include the active dashboard filter in the CSV export
 - [ ] Test requestsToCsv with a null reminders_sent column value
 - [ ] Test requestsToCsv defuses a leading plus sign
+- [ ] Test requestsToCsv defuses a leading minus sign
+- [ ] Persist the dashboard filter choice in the URL query string

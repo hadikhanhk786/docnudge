@@ -74,6 +74,7 @@ export default function Dashboard() {
           <option value="complete">{t('status_complete')}</option>
           <option value="overdue">{t('filter_overdue')}</option>
         </select>
+        {shown.length === 0 && <p className="hint">{t('filter_none')}</p>}
         <ul className="list">
           {shown.map((r) => {
             const total = r.required_total ?? 0;

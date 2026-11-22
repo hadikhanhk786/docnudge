@@ -15,6 +15,7 @@
   "filter_all": "All",
   "filter_open": "Open",
   "filter_overdue": "Overdue",
+  "filter_none": "No requests match this filter.",
   "btn_copy_link": "Copy link",
   "btn_copied": "Copied",
   "btn_whatsapp": "WhatsApp",
