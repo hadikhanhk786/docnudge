@@ -40,8 +40,9 @@
 - [x] Show an empty-state message when the dashboard filter matches no requests
 - [ ] Include the active dashboard filter in the CSV export
 - [x] Test requestsToCsv with a null reminders_sent column value
-- [ ] Test requestsToCsv defuses a leading plus sign
-- [ ] Test requestsToCsv defuses a leading minus sign
+- [x] Test requestsToCsv defuses a leading plus sign
+- [x] Test requestsToCsv defuses a leading minus sign
 - [ ] Persist the dashboard filter choice in the URL query string
 - [ ] Test requestsToCsv defuses a leading at-sign
 - [ ] Test requestsToCsv defuses a leading equals sign
+- [ ] Test requestsToCsv with a very long title stays on one CSV line

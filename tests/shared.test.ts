@@ -369,6 +369,13 @@ describe('requests CSV null counters', () => {
   });
 });
 
+describe('requests CSV leading plus and minus', () => {
+  it('defuses a leading plus or minus sign in a field', () => {
+    const r = { client_name: '+1 Co', client_email: 'a@x.com', title: '-5 refund', status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: 0, created_at: '2026-03-01T10:00:00Z' } as RequestRow;
+    expect(requestsToCsv([r]).split('\r\n')[1]).toBe("'+1 Co,a@x.com,'-5 refund,open,,0,0,0,2026-03-01");
+  });
+});
+
 describe('pack deadline rules', () => {
   it('every template has a non-empty deadline note', () => {
     for (const t of ALL_TEMPLATES) expect(t.deadline.note.trim().length, t.id).toBeGreaterThan(0);
