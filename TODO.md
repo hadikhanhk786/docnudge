@@ -39,7 +39,9 @@
 - [x] Test requestsToCsv quotes a field that has only a carriage return
 - [x] Show an empty-state message when the dashboard filter matches no requests
 - [ ] Include the active dashboard filter in the CSV export
-- [ ] Test requestsToCsv with a null reminders_sent column value
+- [x] Test requestsToCsv with a null reminders_sent column value
 - [ ] Test requestsToCsv defuses a leading plus sign
 - [ ] Test requestsToCsv defuses a leading minus sign
 - [ ] Persist the dashboard filter choice in the URL query string
+- [ ] Test requestsToCsv defuses a leading at-sign
+- [ ] Test requestsToCsv defuses a leading equals sign

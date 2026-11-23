@@ -362,6 +362,13 @@ describe('requests CSV leading whitespace', () => {
   });
 });
 
+describe('requests CSV null counters', () => {
+  it('writes an empty field for a null reminders_sent', () => {
+    const r = { client_name: 'A', client_email: 'a@x.com', title: 'T', status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: null, created_at: '2026-03-01T10:00:00Z' } as unknown as RequestRow;
+    expect(requestsToCsv([r]).split('\r\n')[1]).toBe('A,a@x.com,T,open,,0,0,,2026-03-01');
+  });
+});
+
 describe('pack deadline rules', () => {
   it('every template has a non-empty deadline note', () => {
     for (const t of ALL_TEMPLATES) expect(t.deadline.note.trim().length, t.id).toBeGreaterThan(0);
