@@ -38,7 +38,7 @@
 - [x] Test suggestDueDate leaves the passed-in Date unmutated
 - [x] Test requestsToCsv quotes a field that has only a carriage return
 - [x] Show an empty-state message when the dashboard filter matches no requests
-- [ ] Include the active dashboard filter in the CSV export
+- [x] Include the active dashboard filter in the CSV export
 - [x] Test requestsToCsv with a null reminders_sent column value
 - [x] Test requestsToCsv defuses a leading plus sign
 - [x] Test requestsToCsv defuses a leading minus sign
@@ -46,3 +46,4 @@
 - [ ] Test requestsToCsv defuses a leading at-sign
 - [ ] Test requestsToCsv defuses a leading equals sign
 - [ ] Test requestsToCsv with a very long title stays on one CSV line
+- [ ] Show the number of filtered requests next to the dashboard filter

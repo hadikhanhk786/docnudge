@@ -50,7 +50,7 @@ export default function Dashboard() {
         <h1>{t('dash_title')}</h1>
         <div className="head-actions">
           {rows.length > 0 && (
-            <button type="button" className="btn ghost" onClick={() => downloadCsv(`requests-${todayIso()}.csv`, requestsToCsv(rows))}>
+            <button type="button" className="btn ghost" onClick={() => downloadCsv(`requests-${todayIso()}.csv`, requestsToCsv(shown))}>
               {t('btn_export_csv')}
             </button>
           )}
