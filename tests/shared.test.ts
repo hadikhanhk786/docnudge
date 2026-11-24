@@ -376,6 +376,13 @@ describe('requests CSV leading plus and minus', () => {
   });
 });
 
+describe('requests CSV leading at-sign', () => {
+  it('defuses a leading at-sign in a field', () => {
+    const r = { client_name: '@Co', client_email: 'a@x.com', title: '@SUM(A1)', status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: 0, created_at: '2026-03-01T10:00:00Z' } as RequestRow;
+    expect(requestsToCsv([r]).split('\r\n')[1]).toBe("'@Co,a@x.com,'@SUM(A1),open,,0,0,0,2026-03-01");
+  });
+});
+
 describe('pack deadline rules', () => {
   it('every template has a non-empty deadline note', () => {
     for (const t of ALL_TEMPLATES) expect(t.deadline.note.trim().length, t.id).toBeGreaterThan(0);
