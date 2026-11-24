@@ -46,6 +46,7 @@
 - [x] Test requestsToCsv defuses a leading at-sign
 - [ ] Test requestsToCsv defuses a leading equals sign
 - [x] Test requestsToCsv with a very long title stays on one CSV line
-- [ ] Show the number of filtered requests next to the dashboard filter
+- [x] Show the number of filtered requests next to the dashboard filter
 - [ ] Test requestsToCsv keeps a field that is only a single quote intact
 - [ ] Test requestsToCsv quotes a title containing only a comma
+- [ ] Test that en and ar locale files define the same keys

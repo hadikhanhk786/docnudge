@@ -15,6 +15,7 @@
   "filter_all": "الكل",
   "filter_open": "مفتوح",
   "filter_overdue": "متأخر",
+  "filter_count": "عرض {n} من {total}",
   "filter_none": "لا توجد طلبات تطابق هذا الفلتر.",
   "btn_copy_link": "نسخ الرابط",
   "btn_copied": "تم النسخ",
