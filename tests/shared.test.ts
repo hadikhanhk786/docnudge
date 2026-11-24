@@ -383,6 +383,16 @@ describe('requests CSV leading at-sign', () => {
   });
 });
 
+describe('requests CSV long fields', () => {
+  it('keeps a very long title on one unquoted CSV line', () => {
+    const title = 'x'.repeat(5000);
+    const r = { client_name: 'A', client_email: 'a@x.com', title, status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: 0, created_at: '2026-03-01T10:00:00Z' } as RequestRow;
+    const lines = requestsToCsv([r]).split('\r\n');
+    expect(lines).toHaveLength(3);
+    expect(lines[1]).toBe(`A,a@x.com,${title},open,,0,0,0,2026-03-01`);
+  });
+});
+
 describe('pack deadline rules', () => {
   it('every template has a non-empty deadline note', () => {
     for (const t of ALL_TEMPLATES) expect(t.deadline.note.trim().length, t.id).toBeGreaterThan(0);
