@@ -49,4 +49,6 @@
 - [x] Show the number of filtered requests next to the dashboard filter
 - [ ] Test requestsToCsv keeps a field that is only a single quote intact
 - [ ] Test requestsToCsv quotes a title containing only a comma
-- [ ] Test that en and ar locale files define the same keys
+- [x] Test that en and ar locale files define the same keys
+- [ ] Test that no locale value is an empty string
+- [ ] Test requestsToCsv defuses a leading pipe or percent sign

@@ -10,6 +10,8 @@ import { ALL_TEMPLATES, REGIONS, getTemplate, suggestDueDate, templatesForRegion
 import { MAX_REMINDERS, nextReminderAt } from '../shared/reminders';
 import { inSendWindow } from '../shared/schedule';
 import { makeToken, verifyToken } from '../shared/tokens';
+import arDict from '../src/locales/ar.json';
+import enDict from '../src/locales/en.json';
 
 const SECRET = 'test-secret';
 const ID = '3f2b8c1e-7a4d-4e9b-8c55-0d1f2a3b4c5d';
@@ -426,5 +428,11 @@ describe('templatesForRegion', () => {
       expect(list.every((t) => t.region === r)).toBe(true);
       expect(list).toEqual(ALL_TEMPLATES.filter((t) => t.region === r));
     }
+  });
+});
+
+describe('locale files', () => {
+  it('en and ar define the same keys', () => {
+    expect(Object.keys(arDict).sort()).toEqual(Object.keys(enDict).sort());
   });
 });
