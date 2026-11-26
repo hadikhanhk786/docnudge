@@ -435,4 +435,10 @@ describe('locale files', () => {
   it('en and ar define the same keys', () => {
     expect(Object.keys(arDict).sort()).toEqual(Object.keys(enDict).sort());
   });
+  it('no locale value is an empty string', () => {
+    for (const [name, dict] of [['en', enDict], ['ar', arDict]] as const) {
+      const empty = Object.entries(dict).filter(([, v]) => typeof v === 'string' && v.trim() === '');
+      expect(empty, `${name} empty values`).toEqual([]);
+    }
+  });
 });

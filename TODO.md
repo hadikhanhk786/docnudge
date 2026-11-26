@@ -50,5 +50,7 @@
 - [ ] Test requestsToCsv keeps a field that is only a single quote intact
 - [ ] Test requestsToCsv quotes a title containing only a comma
 - [x] Test that en and ar locale files define the same keys
-- [ ] Test that no locale value is an empty string
+- [x] Test that no locale value is an empty string
 - [ ] Test requestsToCsv defuses a leading pipe or percent sign
+- [ ] Test that ar locale values are not identical to en for translatable keys
+- [ ] Test requestsToCsv keeps a leading-space field unchanged
