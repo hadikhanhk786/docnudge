@@ -392,6 +392,13 @@ describe('requests CSV leading at-sign', () => {
   });
 });
 
+describe('requests CSV leading equals sign', () => {
+  it('defuses a leading equals sign in a field', () => {
+    const r = { client_name: '=Co', client_email: 'a@x.com', title: '=1+1', status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: 0, created_at: '2026-03-01T10:00:00Z' } as RequestRow;
+    expect(requestsToCsv([r]).split('\r\n')[1]).toBe("'=Co,a@x.com,'=1+1,open,,0,0,0,2026-03-01");
+  });
+});
+
 describe('requests CSV long fields', () => {
   it('keeps a very long title on one unquoted CSV line', () => {
     const title = 'x'.repeat(5000);

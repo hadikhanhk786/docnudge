@@ -44,7 +44,7 @@
 - [x] Test requestsToCsv defuses a leading minus sign
 - [ ] Persist the dashboard filter choice in the URL query string
 - [x] Test requestsToCsv defuses a leading at-sign
-- [ ] Test requestsToCsv defuses a leading equals sign
+- [x] Test requestsToCsv defuses a leading equals sign
 - [x] Test requestsToCsv with a very long title stays on one CSV line
 - [x] Show the number of filtered requests next to the dashboard filter
 - [ ] Test requestsToCsv keeps a field that is only a single quote intact
@@ -55,3 +55,4 @@
 - [ ] Test that ar locale values are not identical to en for translatable keys
 - [ ] Test requestsToCsv keeps a leading-space field unchanged
 - [ ] Test requestsToCsv quotes a field containing only a double quote
+- [ ] Test requestsToCsv defuses a leading equals sign inside a quoted comma field
