@@ -371,6 +371,13 @@ describe('requests CSV comma-only field', () => {
   });
 });
 
+describe('requests CSV quote-only field', () => {
+  it('quotes and escapes a title that is only a double quote', () => {
+    const r = { client_name: 'A', client_email: 'a@x.com', title: '"', status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: 0, created_at: '2026-03-01T10:00:00Z' } as RequestRow;
+    expect(requestsToCsv([r]).split('\r\n')[1]).toBe('A,a@x.com,"""",open,,0,0,0,2026-03-01');
+  });
+});
+
 describe('requests CSV null counters', () => {
   it('writes an empty field for a null reminders_sent', () => {
     const r = { client_name: 'A', client_email: 'a@x.com', title: 'T', status: 'open', due_date: null, required_done: 0, required_total: 0, reminders_sent: null, created_at: '2026-03-01T10:00:00Z' } as unknown as RequestRow;

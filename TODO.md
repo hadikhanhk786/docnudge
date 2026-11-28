@@ -54,5 +54,7 @@
 - [ ] Test requestsToCsv defuses a leading pipe or percent sign
 - [ ] Test that ar locale values are not identical to en for translatable keys
 - [ ] Test requestsToCsv keeps a leading-space field unchanged
-- [ ] Test requestsToCsv quotes a field containing only a double quote
+- [x] Test requestsToCsv quotes a field containing only a double quote
 - [ ] Test requestsToCsv defuses a leading equals sign inside a quoted comma field
+- [ ] Test requestsToCsv keeps a field with an embedded double quote and comma escaped in order
+- [ ] Test requestsToCsv defuses a leading equals sign in client_email
